@@ -9,6 +9,9 @@
 
 O sistema permite que usuários naveguem por um catálogo de produtos, visualizem informações detalhadas de cada item, adicionem produtos ao carrinho e finalizem suas compras de forma simples e segura através de integração com um sistema de pagamento.
 
+
+**Caminho para a prototipagem:** https://www.figma.com/design/ZBddIa2PLizXKOcFiiqywY/Sem-t%C3%ADtulo?node-id=0-1&p=f&t=yEjFKUmlnbBhymCy-0
+
 ---
 
 
