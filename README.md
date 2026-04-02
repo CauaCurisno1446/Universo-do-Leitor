@@ -10,7 +10,7 @@
 O sistema permite que usuários naveguem por um catálogo de produtos, visualizem informações detalhadas de cada item, adicionem produtos ao carrinho e finalizem suas compras de forma simples e segura através de integração com um sistema de pagamento.
 
 
-**Caminho para a prototipagem:** https://www.figma.com/proto/ZBddIa2PLizXKOcFiiqywY/Prot%C3%B3tipo-Cartify?node-id=0-1&t=yEjFKUmlnbBhymCy-1
+**Caminho para a prototipagem:** https://www.figma.com/proto/ZBddIa2PLizXKOcFiiqywY/Prot%C3%B3tipo-Universo-do-Leitor?node-id=0-1&t=5nnreoLRM9ZgtHDQ-1
 
 ---
 
