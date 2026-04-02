@@ -1,11 +1,11 @@
-# Cartify
+# Universo do Leitor
 > Projeto por Cauã Cursino - 3° ADS
 
 <hr>
 
 ## Sobre o Projeto
 
-**Cartify** é um projeto de e-commerce desenvolvido com o objetivo de demonstrar o funcionamento de uma plataforma de compras online moderna e funcional.
+**Universo do Leitor** é um projeto de e-commerce desenvolvido com o objetivo de demonstrar o funcionamento de uma plataforma de compras online moderna e funcional.
 
 O sistema permite que usuários naveguem por um catálogo de produtos, visualizem informações detalhadas de cada item, adicionem produtos ao carrinho e finalizem suas compras de forma simples e segura através de integração com um sistema de pagamento.
 
@@ -57,7 +57,7 @@ O sistema permite que usuários naveguem por um catálogo de produtos, visualize
 
 | Sprint | Épicos Alocados | Foco do MVP |
 | :--- | :--- | :--- |
-| **Sprint 1**<br>*(16/03 a definir)* | **E1:** Catálogo de Produtos<br>**E2:** Busca e Navegação<br>**E3:** Sistema de Carrinho de Compras | **Base do E-commerce:** Nesta sprint é desenvolvido o catálogo de produtos da loja. Os usuários podem visualizar a lista de produtos, acessar páginas de detalhes e utilizar a busca para encontrar itens específicos. Também é implementado o sistema inicial de carrinho de compras, permitindo adicionar produtos e visualizar os itens selecionados. |
+| **Sprint 1**<br>*(à definir)* | **E1:** Catálogo de Produtos<br>**E2:** Busca e Navegação<br>**E3:** Sistema de Carrinho de Compras | **Base do E-commerce:** Nesta sprint é desenvolvido o catálogo de produtos da loja. Os usuários podem visualizar a lista de produtos, acessar páginas de detalhes e utilizar a busca para encontrar itens específicos. Também é implementado o sistema inicial de carrinho de compras, permitindo adicionar produtos e visualizar os itens selecionados. |
 | **Sprint 2**<br>*(à definir)* | **E3:** Sistema de Carrinho de Compras<br>**E4:** Autenticação e Contas de Usuário<br>**E5:** Processo de Checkout<br>**E6:** Integração com Sistema de Pagamento | **Fluxo de Compra:** Nesta sprint o foco é permitir que o usuário finalize uma compra. O carrinho passa a permitir alteração de quantidades e remoção de itens. Também são implementados cadastro e login de usuários, cadastro de endereço de entrega e a integração com um sistema de pagamento para conclusão das compras. |
 | **Sprint 3**<br>*(à definir)* | **E6:** Integração com Sistema de Pagamento<br>**E7:** Painel Administrativo<br>**E8:** Histórico e Relatórios | **Gestão e Finalização:** Nesta sprint são adicionadas funcionalidades administrativas para gerenciamento do catálogo e visualização de pedidos realizados. O sistema também passa a registrar o histórico de compras dos usuários e disponibilizar relatórios básicos de vendas para o administrador da loja. |
 
