@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import MainLayout from '../layout/MainLayout'
 import Home from '../pages/Home'
+import Produtos from '../pages/Produtos'
 import Teste from '../pages/Teste'
 
 function AppRoutes() {
@@ -8,6 +9,7 @@ function AppRoutes() {
     <Routes>
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/produtos" element={<Produtos />} />
         <Route path='/teste' element={<Teste />} />
         {/* adicione suas páginas aqui */}
       </Route>

@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+:root{
+  --marrom: #57342D;
+  --bege: #cfd3c2;
+  --branco: #F5F5F5;
+  --header: #f9fdea;
+  --cinza: #f0f0f0;
+}
+
 @font-face {
   font-family: "Logo";
   src: url("../fonts/Gotu-Regular.ttf") format("truetype");
@@ -15,14 +23,5 @@
 }
 
 #Texto{
-  margin-bottom: 7%;
-  font-size: 54px;
   font-family: "Logo", sans-serif;
-}
-
-#Texto span{
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 16px;
-  color: white;
-  font-weight: bold;
 }
