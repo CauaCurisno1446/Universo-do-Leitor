@@ -158,7 +158,7 @@ function FilterBar({ onFilterChange }: FilterBarProps) {
             className="absolute w-full top-0 h-full opacity-0 cursor-pointer"
             style={{ zIndex: 4 }}
           />
-          {/* Visual thumbs */}
+
           <div
             className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-[var(--marrom)] pointer-events-none shadow"
             style={{ left: `${minPercent}%` }}

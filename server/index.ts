@@ -12,7 +12,29 @@ app.use(express.json())
 //GET
 app.get("/produtos", async (req: Request, res: Response) => {
   try {
-    const produtos = await prisma.produto.findMany()
+    const { precoMin, precoMax, emEstoque, categoria } = req.query
+
+    const categorias = Array.isArray(categoria)
+      ? categoria
+      : categoria
+      ? [categoria as string]
+      : []
+
+    const where: any = {
+      preco: {
+        gte: Number(precoMin) || 0,
+        lte: Number(precoMax) || 1000,
+      },
+    }
+
+    if (emEstoque === "true") where.estoque = { gt: 0 }
+    if (emEstoque === "false") where.estoque = { lte: 0 }
+
+    if (categorias.length > 0) {
+      where.categoria = { in: categorias }
+    }
+
+    const produtos = await prisma.produto.findMany({ where })
     res.json(produtos)
   } catch (error) {
     res.status(500).json({ error: "Erro ao buscar produtos" })

@@ -15,16 +15,90 @@ model Produto {
   preco       Float
   imagemUrl   String
   categoria   String
+  sacolaItens   SacolaItem[]   
+  favoritos     Favorito[]     
+  pedidoItens   PedidoItem[] 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
 model Usuario {
-  id          Int      @id @default(autoincrement())
-  uuid        String   @default(uuid())
+  id          Int        @id @default(autoincrement())
+  uuid        String     @default(uuid())
   nome        String
-  email       String   @unique
+  email       String     @unique
   senha       String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  sacola      Sacola?
+  pedidos     Pedido[]
+  favoritos   Favorito[]
+  enderecos   Endereco[]
+  pagamentos  Pagamento[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Endereco {
+  id         Int      @id @default(autoincrement())
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
+  usuarioId  Int
+  rua        String
+  cidade     String
+  cep        String
+}
+
+model Pagamento {
+  id        Int    @id @default(autoincrement())
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
+  usuarioId  Int
+  pedidoId  Int
+  metodo    String
+  status    String
+}
+
+model Sacola {
+  id        Int             @id @default(autoincrement())
+  usuario   Usuario         @relation(fields: [usuarioId], references: [id])
+  usuarioId Int             @unique
+  itens     SacolaItem[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model SacolaItem {
+  id          Int      @id @default(autoincrement())
+  sacola      Sacola   @relation(fields: [sacolaId], references: [id])
+  sacolaId    Int
+  produto     Produto  @relation(fields: [produtoId], references: [id])
+  produtoId   Int
+  quantidade  Int
+}
+
+model Favorito {
+  id          Int      @id @default(autoincrement())
+  usuario     Usuario @relation(fields: [usuarioId], references: [id])
+  usuarioId   Int
+  produto     Produto @relation(fields: [produtoId], references: [id])
+  produtoId   Int
+
+  @@unique([usuarioId, produtoId])
+}
+
+model Pedido {
+  id          Int          @id @default(autoincrement())
+  usuario     Usuario      @relation(fields: [usuarioId], references: [id])
+  usuarioId   Int
+  status      String
+  total       Float
+  itens       PedidoItem[]
+  createdAt   DateTime     @default(now())
+}
+
+model PedidoItem {
+  id          Int      @id @default(autoincrement())
+  pedido      Pedido   @relation(fields: [pedidoId], references: [id])
+  pedidoId    Int
+  produto     Produto  @relation(fields: [produtoId], references: [id])
+  produtoId   Int
+  quantidade  Int
+  preco       Float
 }
