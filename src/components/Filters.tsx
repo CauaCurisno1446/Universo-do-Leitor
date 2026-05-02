@@ -83,7 +83,7 @@ function FilterBar({ onFilterChange }: FilterBarProps) {
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-bold text-[var(--marrom)]">Filtros</h2>
+          <h2 className="text-lg" id="Filtro">Filtros</h2>
           <button
             onClick={limparEstoque}
             className="text-xs text-gray-400 hover:text-[var(--marrom)] underline cursor-pointer duration-150"
@@ -123,7 +123,7 @@ function FilterBar({ onFilterChange }: FilterBarProps) {
 
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-[var(--marrom)]">Preço</h2>
+          <h2 className="text-lg" id="Filtro">Preço</h2>
           <button
             onClick={limparPreco}
             className="text-xs text-gray-400 hover:text-[var(--marrom)] underline cursor-pointer duration-150"
@@ -178,7 +178,7 @@ function FilterBar({ onFilterChange }: FilterBarProps) {
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-bold text-[var(--marrom)]">Categorias</h2>
+          <h2 className="text-lg" id="Filtro">Categorias</h2>
           <button
             onClick={limparCategorias}
             className="text-xs text-gray-400 hover:text-[var(--marrom)] underline cursor-pointer duration-150"

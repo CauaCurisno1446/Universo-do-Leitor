@@ -13,7 +13,7 @@ function Produtos() {
             id="Texto"
             className="text-[var(--branco)] text-5xl font-bold leading-tight tracking-wider uppercase"
           >
-            ENCONTRE O LIVRO IDEAL PARA VOCÊ.
+            ENCONTRE O PRODUTO IDEAL PARA VOCÊ.
           </h1>
         </div>
         <div

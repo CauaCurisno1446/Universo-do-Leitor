@@ -3,6 +3,7 @@ import MainLayout from '../layout/MainLayout'
 import Home from '../pages/Home'
 import Produtos from '../pages/Produtos'
 import Teste from '../pages/Teste'
+import Sacola from '../pages/Sacola'
 
 function AppRoutes() {
   return (
@@ -10,6 +11,7 @@ function AppRoutes() {
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/produtos" element={<Produtos />} />
+        <Route path="/sacola" element={<Sacola />} />
         <Route path='/teste' element={<Teste />} />
         {/* adicione suas páginas aqui */}
       </Route>
