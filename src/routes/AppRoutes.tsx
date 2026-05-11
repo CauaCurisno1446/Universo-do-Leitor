@@ -1,9 +1,11 @@
-import { Routes, Route } from 'react-router-dom'
-import MainLayout from '../layout/MainLayout'
-import Home from '../pages/Home'
-import Produtos from '../pages/Produtos'
-import Teste from '../pages/Teste'
-import Sacola from '../pages/Sacola'
+import { Routes, Route } from "react-router-dom";
+import MainLayout from "../layout/MainLayout";
+import Home from "../pages/Home";
+import Produtos from "../pages/Produtos";
+import Sacola from "../pages/Sacola";
+import ProdutoDesc from "../pages/ProdutoDesc";
+import Login from "../pages/Login";
+import Cadastro from "../pages/Cadastro";
 
 function AppRoutes() {
   return (
@@ -11,12 +13,14 @@ function AppRoutes() {
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/produtos" element={<Produtos />} />
+        <Route path="/produtos/:id" element={<ProdutoDesc />} />
         <Route path="/sacola" element={<Sacola />} />
-        <Route path='/teste' element={<Teste />} />
-        {/* adicione suas páginas aqui */}
       </Route>
+
+      <Route path="/login" element={<Login />} />
+      <Route path="/cadastro" element={<Cadastro />} />
     </Routes>
-  )
+  );
 }
 
-export default AppRoutes
+export default AppRoutes;
