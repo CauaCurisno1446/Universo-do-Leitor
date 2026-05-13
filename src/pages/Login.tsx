@@ -6,6 +6,7 @@ import { InputTexto } from "../components/InputTexto";
 import { InputSenha } from "../components/InputSenha";
 import ClickSpark from "../components/ClickSpark";
 import Fundo from "../assets/img/login.png";
+import BtnVoltar from "../components/BtnVoltar";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -16,15 +17,30 @@ function Login() {
   function handleEntrar(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      navigate("/");
-    }, 1200);
+
+    fetch("http://localhost:3000/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, senha }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("usuario", JSON.stringify(data.usuario));
+        navigate("/perfil");
+      })
+      .finally(() => setLoading(false));
   }
 
   return (
     <div className="min-h-screen w-full flex">
       <div className="w-full md:w-[480px] lg:w-[520px] flex flex-col justify-center px-8 md:px-14 py-12 bg-[var(--branco)] shrink-0">
+        <BtnVoltar label="Voltar" />
+        <br />
         <h1 className="text-3xl font-bold text-[var(--marrom)] mb-1" id="Texto">
           Login
         </h1>
@@ -39,12 +55,20 @@ function Login() {
               onCriar={(e) => setEmail(e.target.value)}
               placeholder="seu@email.com"
               className=""
+              id="email"
+              name="email"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Senha</label>
-            <InputSenha value={senha} placeholder="••••••••" onCriar={(e) => setSenha(e.target.value)} />
+            <InputSenha
+              value={senha}
+              placeholder="••••••••"
+              onCriar={(e) => setSenha(e.target.value)}
+              id="senha"
+              name="senha"
+            />
           </div>
 
           <ClickSpark>

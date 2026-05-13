@@ -1,69 +1,76 @@
-import express from "express"
-import type { Request, Response } from "express"
-import cors from "cors"
-import { PrismaClient } from "@prisma/client"
+import express from "express";
+import type { Request, Response } from "express";
+import cors from "cors";
+import { PrismaClient } from "@prisma/client";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import autenticar from "./middleware/autenticar.js";
 
-const prisma = new PrismaClient()
+const JWT_SECRET = "QrKgQ320Or4K";
+const prisma = new PrismaClient();
 
-const app = express()
-app.use(cors())
-app.use(express.json())
+const app = express();
+app.use(cors());
+app.use(express.json());
 
 //GET
 app.get("/produtos", async (req: Request, res: Response) => {
   try {
-    const { precoMin, precoMax, emEstoque, categoria } = req.query
+    console.log("QUERY:", req.query);
 
-    const categorias = Array.isArray(categoria)
-      ? categoria
-      : categoria
-      ? [categoria as string]
-      : []
+    const produtos = await prisma.produto.findMany();
 
-    const where: any = {
-      preco: {
-        gte: Number(precoMin) || 0,
-        lte: Number(precoMax) || 1000,
-      },
-    }
-
-    if (emEstoque === "true") where.estoque = { gt: 0 }
-    if (emEstoque === "false") where.estoque = { lte: 0 }
-
-    if (categorias.length > 0) {
-      where.categoria = { in: categorias }
-    }
-
-    const produtos = await prisma.produto.findMany({ where })
-    res.json(produtos)
+    res.json(produtos);
   } catch (error) {
-    res.status(500).json({ error: "Erro ao buscar produtos" })
+    console.error("ERRO COMPLETO:");
+    console.dir(error, { depth: null });
+
+    res.status(500).json({
+      error: error instanceof Error ? error.message : error,
+    });
   }
-})
+});
 
 app.get("/produtos/:id", async (req: Request, res: Response) => {
   try {
-    const id = Number(req.params.id)
+    const id = Number(req.params.id);
 
     const produto = await prisma.produto.findUnique({
-      where: { id }
-    })
+      where: { id },
+    });
 
     if (!produto) {
-      return res.status(404).json({ error: "Produto não encontrado" })
+      return res.status(404).json({ error: "Produto não encontrado" });
     }
 
-    res.json(produto)
+    res.json(produto);
   } catch (error) {
-    res.status(500).json({ error: "Erro ao buscar produto" })
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar produto" });
   }
-})
+});
 
+app.get("/perfil", autenticar, async (req: any, res: Response) => {
+  const usuario = await prisma.usuario.findUnique({
+    where: { id: req.usuario.id },
+    select: { id: true, nome: true, email: true, createdAt: true },
+  });
+  res.json(usuario);
+});
 
-//POST 
+app.get("/sacola", autenticar, async (req: any, res) => {
+  const usuarioId = req.usuario.id;
+  const sacola = await prisma.sacola.findUnique({
+    where: { usuarioId },
+    include: { itens: { include: { produto: true } } },
+  });
+  res.json(sacola);
+});
+
+//POST
 app.post("/produtos", async (req: Request, res: Response) => {
   try {
-    const { nome, descricao, preco, imagemUrl, categoria } = req.body
+    const { nome, descricao, preco, imagemUrl, categoria } = req.body;
 
     const novoProduto = await prisma.produto.create({
       data: {
@@ -71,21 +78,61 @@ app.post("/produtos", async (req: Request, res: Response) => {
         descricao,
         preco,
         imagemUrl,
-        categoria
-      }
-    })
+        categoria,
+      },
+    });
 
-    res.status(201).json(novoProduto)
+    res.status(201).json(novoProduto);
   } catch (error) {
-    res.status(500).json({ error: "Erro ao criar produto" })
+    console.error(error);
+    res.status(500).json({ error: "Erro ao criar produto" });
   }
-})
+});
 
-//PUT 
+app.post("/cadastro", async (req: Request, res: Response) => {
+  try {
+    const { nome, email, senha, cpf } = req.body;
+
+    const jaExiste = await prisma.usuario.findUnique({ where: { email } });
+    if (jaExiste) return res.status(400).json({ error: "E-mail já cadastrado" });
+
+    const senhaHash = await bcrypt.hash(senha, 10);
+
+    const usuario = await prisma.usuario.create({
+      data: { nome, email, senha: senhaHash, cpf },
+    });
+
+    res.status(201).json({ id: usuario.id, nome: usuario.nome, email: usuario.email });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao cadastrar" });
+  }
+});
+
+app.post("/login", async (req: Request, res: Response) => {
+  try {
+    const { email, senha } = req.body;
+
+    const usuario = await prisma.usuario.findUnique({ where: { email } });
+    if (!usuario) return res.status(401).json({ error: "E-mail ou senha inválidos" });
+
+    const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
+    if (!senhaCorreta) return res.status(401).json({ error: "E-mail ou senha inválidos" });
+
+    const token = jwt.sign({ id: usuario.id, email: usuario.email }, JWT_SECRET, { expiresIn: "7d" });
+
+    res.json({ token, usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email } });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao fazer login" });
+  }
+});
+
+//PUT
 app.put("/produtos/:id", async (req: Request, res: Response) => {
   try {
-    const id = Number(req.params.id)
-    const { nome, descricao, preco, imagemUrl, categoria } = req.body
+    const id = Number(req.params.id);
+    const { nome, descricao, preco, imagemUrl, categoria } = req.body;
 
     const produtoAtualizado = await prisma.produto.update({
       where: { id },
@@ -94,31 +141,33 @@ app.put("/produtos/:id", async (req: Request, res: Response) => {
         descricao,
         preco,
         imagemUrl,
-        categoria
-      }
-    })
+        categoria,
+      },
+    });
 
-    res.json(produtoAtualizado)
+    res.json(produtoAtualizado);
   } catch (error) {
-    res.status(500).json({ error: "Erro ao atualizar produto" })
+    console.error(error);
+    res.status(500).json({ error: "Erro ao atualizar produto" });
   }
-})
+});
 
 //DELETE
 app.delete("/produtos/:id", async (req: Request, res: Response) => {
   try {
-    const id = Number(req.params.id)
+    const id = Number(req.params.id);
 
     await prisma.produto.delete({
-      where: { id }
-    })
+      where: { id },
+    });
 
-    res.json({ message: "Produto deletado com sucesso" })
+    res.json({ message: "Produto deletado com sucesso" });
   } catch (error) {
-    res.status(500).json({ error: "Erro ao deletar produto" })
+    console.error(error);
+    res.status(500).json({ error: "Erro ao deletar produto" });
   }
-})
+});
 
 app.listen(3000, () => {
-  console.log("Servidor rodando em http://localhost:3000")
-})
+  console.log("Servidor rodando em http://localhost:3000");
+});

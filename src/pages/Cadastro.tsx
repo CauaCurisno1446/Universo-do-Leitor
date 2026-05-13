@@ -6,6 +6,7 @@ import { InputTexto } from "../components/InputTexto";
 import { InputSenha } from "../components/InputSenha";
 import ClickSpark from "../components/ClickSpark";
 import Fundo from "../assets/img/login.png";
+import BtnVoltar from "../components/BtnVoltar";
 
 function Cadastro() {
   const [nome, setNome] = useState("");
@@ -28,23 +29,33 @@ function Cadastro() {
 
   function handleCadastrar(e: React.FormEvent) {
     e.preventDefault();
-
     if (senha !== confirmar) return;
-
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
-      navigate("/login");
-    }, 1200);
+    fetch("http://localhost:3000/cadastro", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome, email, senha }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
+        navigate("/login"); // cadastrou, manda pro login
+      })
+      .finally(() => setLoading(false));
   }
 
   const senhasNaoBatem = confirmar && senha !== confirmar;
 
   return (
     <div className="min-h-screen w-full flex">
-      {/* Lado esquerdo */}
       <div className="w-full md:w-[480px] lg:w-[520px] flex flex-col justify-center px-8 md:px-14 py-12 bg-[var(--branco)] shrink-0 overflow-y-auto">
+        <BtnVoltar label="Voltar" />
+        <br />
+
         <h1 className="text-3xl font-bold text-[var(--marrom)] mb-1" id="Texto">
           Cadastro
         </h1>
@@ -55,50 +66,57 @@ function Cadastro() {
           {/* Nome */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Nome</label>
-
             <InputTexto
               type="text"
               value={nome}
               onCriar={(e) => setNome(e.target.value)}
               placeholder="Seu nome completo"
+              id="nome"
+              name="nome"
             />
           </div>
 
           {/* CPF */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider">CPF</label>
-
             <InputTexto
               type="text"
               value={cpf}
               onCriar={(e) => setCpf(formatarCpf(e.target.value))}
               placeholder="000.000.000-00"
+              id="cpf"
+              name="cpf"
             />
           </div>
 
           {/* Email */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider">E-mail</label>
-
             <InputTexto
               type="email"
               value={email}
               onCriar={(e) => setEmail(e.target.value)}
               placeholder="seu@email.com"
+              id="email"
+              name="email"
             />
           </div>
 
           {/* Senha */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Senha</label>
-
-            <InputSenha value={senha} onCriar={(e) => setSenha(e.target.value)} placeholder="Mínimo 6 caracteres" />
+            <InputSenha
+              value={senha}
+              onCriar={(e) => setSenha(e.target.value)}
+              placeholder="Mínimo 6 caracteres"
+              id="senha"
+              name="senha"
+            />
           </div>
 
           {/* Confirmar senha */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Confirmar senha</label>
-
             <InputSenha
               value={confirmar}
               onCriar={(e) => setConfirmar(e.target.value)}
@@ -135,7 +153,6 @@ function Cadastro() {
         </p>
       </div>
 
-      {/* Lado direito */}
       <div
         className="hidden md:block flex-1 bg-cover bg-center bg-no-repeat relative bg-[var(--marrom)]"
         style={{ backgroundImage: `url(${Fundo})` }}>

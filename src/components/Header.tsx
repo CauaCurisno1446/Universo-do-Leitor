@@ -13,6 +13,15 @@ function Header() {
   const { itens, removerItem, alterarQuantidade, total } = useSacola();
   const navigate = useNavigate();
 
+  function handleUsuario() {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/perfil");
+    } else {
+      navigate("/login");
+    }
+  }
+
   return (
     <>
       <header className="w-full bg-[var(--header)] h-[70px] flex items-center justify-between px-6 md:px-10 relative z-50 shadow-sm">
@@ -48,7 +57,7 @@ function Header() {
 
           <button
             className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[var(--bege)] transition-colors duration-200 cursor-pointer"
-            onClick={() => navigate("/login")}
+            onClick={handleUsuario}
             aria-label="Usuário">
             <User size={22} className="text-[var(--marrom)]" />
           </button>

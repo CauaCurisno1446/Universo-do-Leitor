@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, ShoppingBag, Star, Truck, Heart, Share2, ShieldCheck } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { ShoppingBag, Star, Truck, Heart, Share2, ShieldCheck } from "lucide-react";
 import { useSacola } from "../components/Item";
 import ClickSpark from "../components/ClickSpark";
+import BtnVoltar from "../components/BtnVoltar";
 
 const Skeleton = () => (
   <div className="min-h-screen bg-white animate-pulse flex items-center justify-center">
@@ -24,7 +25,6 @@ const Skeleton = () => (
 
 function ProdutoDesc() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [produto, setProduto] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [quantidade, setQuantidade] = useState(1);
@@ -54,12 +54,7 @@ function ProdutoDesc() {
     <section className="min-h-screen bg-[#FDFDFD] flex items-center py-12 md:py-20">
       <div className=" mx-auto px-6 md:px-12 w-full">
         <div className="flex justify-between items-center mb-12">
-          <button
-            onClick={() => navigate(-1)}
-            className="group flex items-center gap-3 text-stone-400 hover:text-black transition-all cursor-pointer">
-            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="text-sm font-semibold tracking-tight">Voltar à Galeria</span>
-          </button>
+          <BtnVoltar label="Voltar à galeria" />
           <div className="flex gap-3">
             <button className="p-3 rounded-full border border-stone-100 bg-white shadow-sm hover:text-red-500 transition-all">
               <Heart size={20} />

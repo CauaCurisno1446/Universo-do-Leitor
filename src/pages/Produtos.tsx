@@ -16,7 +16,7 @@ interface Filters {
 }
 
 function Produtos() {
-  const [produtos, setProdutos] = useState([]);
+  const [produtos, setProdutos] = useState<any[]>([]);
   const [pesquisa, setPesquisa] = useState("");
   const [filtros, setFiltros] = useState<Filters>({
     emEstoque: true,
@@ -39,13 +39,33 @@ function Produtos() {
     filtros.categorias.forEach((cat: string) => params.append("categoria", cat));
 
     fetch(`http://localhost:3000/produtos?${params.toString()}`)
-      .then((res) => res.json())
-      .then((data) => setProdutos(data));
+      .then(async (res) => {
+        if (!res.ok) {
+          const erro = await res.json();
+          console.error("Erro backend:", erro);
+
+          setProdutos([]);
+          return;
+        }
+
+        return res.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setProdutos(data);
+        } else {
+          setProdutos([]);
+        }
+      })
+      .catch((error) => {
+        console.error("Erro fetch:", error);
+        setProdutos([]);
+      });
   }, [filtros]);
 
-  const produtosFiltrados = produtos.filter((produto: any) =>
-    produto.nome.toLowerCase().includes(pesquisa.toLowerCase()),
-  );
+  const produtosFiltrados = Array.isArray(produtos)
+    ? produtos.filter((produto: any) => produto.nome.toLowerCase().includes(pesquisa.toLowerCase()))
+    : [];
 
   return (
     <section className="w-full h-auto bg-white">

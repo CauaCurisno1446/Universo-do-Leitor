@@ -12,9 +12,11 @@ model Produto {
   uuid        String   @default(uuid())
   nome        String
   descricao   String
+  descDetalhada String?
   preco       Float
   imagemUrl   String
   categoria   String
+  estoque         Int      @default(0)
   sacolaItens   SacolaItem[]   
   favoritos     Favorito[]     
   pedidoItens   PedidoItem[] 
@@ -26,6 +28,7 @@ model Usuario {
   id          Int        @id @default(autoincrement())
   uuid        String     @default(uuid())
   nome        String
+  cpf         String?
   email       String     @unique
   senha       String
   sacola      Sacola?

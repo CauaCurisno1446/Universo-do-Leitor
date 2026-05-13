@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingBag, X, CreditCard, Truck, ArrowLeft, CheckCircle } from "lucide-react";
+import { ShoppingBag, X, CreditCard, Truck, CheckCircle } from "lucide-react";
 import { useSacola } from "../components/Item";
 import ClickSpark from "../components/ClickSpark";
+import BtnVoltar from "../components/BtnVoltar";
 
 type MetodoPagamento = "pix" | "credito" | "boleto";
 
@@ -49,12 +50,7 @@ function Sacola() {
   return (
     <section className="min-h-screen bg-[var(--branco)]">
       <div className=" mx-auto px-4 md:px-10 py-8 md:py-14">
-        <button
-          onClick={() => navigate("/produtos")}
-          className="group flex items-center gap-3 text-stone-400 hover:text-black transition-all cursor-pointer">
-          <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-          <span className="text-sm font-semibold tracking-tight">Continuar comprando</span>
-        </button>
+        <BtnVoltar label="Continuar comprando" />
 
         <br />
 
