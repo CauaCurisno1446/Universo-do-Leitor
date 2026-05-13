@@ -106,6 +106,13 @@ function ProdutoDesc() {
                   "Uma peça exclusiva selecionada para transformar seu ambiente com elegância e sofisticação atemporal."}
               </p>
 
+              <br />
+
+              <p className="text-lg text-stone-500 font-light text-justify leading-relaxed">
+                {produto.descDetalhada || "Descrição do produto"}
+              </p>
+
+              <br />
               <div className="bg-stone-50/50 border border-stone-100 p-2 rounded-[2.5rem]">
                 <div className="bg-white p-6 rounded-[2rem] shadow-sm flex flex-col md:flex-row gap-4 items-center">
                   <div className="flex items-center border border-stone-100 rounded-2xl p-1 bg-stone-50">

@@ -7,10 +7,11 @@ type ProdutosProps = {
   nome: string;
   preco: number;
   descricao?: string;
+  descricaoDetalhada?: string;
   onCriar: () => void;
 };
 
-function Produto({ id, imagem, nome, preco, descricao, onCriar }: ProdutosProps) {
+function Produto({ id, imagem, nome, preco, descricao, descricaoDetalhada, onCriar }: ProdutosProps) {
   return (
     <div className="bg-white rounded-xl shadow-md p-3 hover:scale-105 transition cursor-pointer">
       <Link to={`/produtos/${id}`}>
@@ -20,9 +21,16 @@ function Produto({ id, imagem, nome, preco, descricao, onCriar }: ProdutosProps)
           {nome}
         </h2>
 
-        <p className="text-md font-bold text-black mt-1">R$ {preco.toFixed(2)}</p>
+        <p className="text-md font-bold text-black mt-1">
+          {(preco / 100).toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          })}
+        </p>
 
         <p className="text-md text-black mt-1">{descricao}</p>
+        <br />
+        <p className="text-md text-black mt-1">{descricaoDetalhada}</p>
       </Link>
 
       <br />

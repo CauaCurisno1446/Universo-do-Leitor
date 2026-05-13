@@ -106,7 +106,10 @@ function Header() {
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-[var(--marrom)] leading-tight truncate">{item.nome}</p>
                       <p className="text-xs font-bold text-black mt-0.5">
-                        R$ {(item.preco * item.quantidade).toFixed(2)}
+                        {((item.preco / 100) * item.quantidade).toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
                         <button
@@ -137,7 +140,12 @@ function Header() {
                 <span id="Texto" className="text-[var(--marrom)]">
                   Total
                 </span>
-                <span className="text-[var(--marrom)]">R$ {total.toFixed(2)}</span>
+                <span className="text-[var(--marrom)]">
+                  {(total / 100).toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                </span>
               </div>
               <NavLink
                 to="/sacola"

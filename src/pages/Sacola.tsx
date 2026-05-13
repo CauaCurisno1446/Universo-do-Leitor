@@ -85,8 +85,9 @@ function Sacola() {
                       {item.nome}
                     </p>
                     <p className="text-base font-bold text-[var(--marrom)] mt-1">
-                      R$ {(item.preco * item.quantidade).toFixed(2)}
+                      R$ {((item.preco / 100) * item.quantidade).toFixed(2)}
                     </p>
+
                     <div className="flex items-center gap-2 mt-2">
                       <button
                         onClick={() => alterarQuantidade(item.id, item.quantidade - 1)}
@@ -235,7 +236,7 @@ function Sacola() {
                     <span>
                       Subtotal ({itens.length} {itens.length === 1 ? "item" : "itens"})
                     </span>
-                    <span>R$ {total.toFixed(2)}</span>
+                    <span>R$ {(total / 100).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Frete</span>
@@ -244,14 +245,14 @@ function Sacola() {
                   {metodoPagamento === "pix" && (
                     <div className="flex justify-between text-green-300">
                       <span>Desconto PIX (5%)</span>
-                      <span>− R$ {(total * 0.05).toFixed(2)}</span>
+                      <span>− R$ {((total * 0.05) / 100).toFixed(2)}</span>
                     </div>
                   )}
                 </div>
                 <div className="border-t border-white/20 my-3" />
                 <div className="flex justify-between font-bold text-base">
                   <span id="Texto">Total</span>
-                  <span>R$ {(metodoPagamento === "pix" ? totalFinal * 0.95 : totalFinal).toFixed(2)}</span>
+                  <span>R$ {((metodoPagamento === "pix" ? totalFinal * 0.95 : totalFinal) / 100).toFixed(2)}</span>
                 </div>
 
                 <ClickSpark>
