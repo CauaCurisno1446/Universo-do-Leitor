@@ -1,5 +1,5 @@
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -8,100 +8,116 @@ generator client {
 }
 
 model Produto {
-  id          Int      @id @default(autoincrement())
-  uuid        String   @default(uuid())
-  nome        String
-  descricao   String
-  descDetalhada String?
-  preco       Float
-  imagemUrl   String
-  categoria   String
-  estoque         Int      @default(0)
-  sacolaItens   SacolaItem[]   
-  favoritos     Favorito[]     
-  pedidoItens   PedidoItem[] 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            Int          @id @default(autoincrement())
+  uuid          String       @default(uuid())
+  nome          String
+  descricao     String
+  descDetalhada String?      @db.LongText
+  preco         Int          // Alterado para Int (armazenar em centavos)
+  imagemUrl     String
+  categoria     String
+  estoque       Int          @default(0)
+  ativo         Boolean      @default(true) // Soft delete adicionado
+  sacolaItens   SacolaItem[]
+  favoritos     Favorito[]
+  pedidoItens   PedidoItem[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 model Usuario {
-  id          Int        @id @default(autoincrement())
-  uuid        String     @default(uuid())
-  nome        String
-  cpf         String?
-  email       String     @unique
-  senha       String
-  sacola      Sacola?
-  pedidos     Pedido[]
-  favoritos   Favorito[]
-  enderecos   Endereco[]
-  pagamentos  Pagamento[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id         Int         @id @default(autoincrement())
+  uuid       String      @default(uuid())
+  nome       String
+  cpf        String?
+  email      String      @unique
+  senha      String
+  sacola     Sacola?
+  pedidos    Pedido[]
+  favoritos  Favorito[]
+  enderecos  Endereco[]
+  pagamentos Pagamento[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 }
 
 model Endereco {
-  id         Int      @id @default(autoincrement())
-  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
-  usuarioId  Int
-  rua        String
-  cidade     String
-  cep        String
+  id          Int      @id @default(autoincrement())
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
+  usuarioId   Int
+  rua         String
+  numero      String   // Adicionado
+  complemento String?  // Adicionado
+  bairro      String   // Adicionado
+  cidade      String
+  estado      String   // Adicionado
+  cep         String
 }
 
 model Pagamento {
-  id        Int    @id @default(autoincrement())
-  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
-  usuarioId  Int
+  id        Int      @id @default(autoincrement())
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  usuarioId Int
+  pedido    Pedido   @relation(fields: [pedidoId], references: [id]) // Relação mapeada
   pedidoId  Int
   metodo    String
   status    String
 }
 
 model Sacola {
-  id        Int             @id @default(autoincrement())
-  usuario   Usuario         @relation(fields: [usuarioId], references: [id])
-  usuarioId Int             @unique
+  id        Int          @id @default(autoincrement())
+  usuario   Usuario      @relation(fields: [usuarioId], references: [id])
+  usuarioId Int          @unique
   itens     SacolaItem[]
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 }
 
 model SacolaItem {
-  id          Int      @id @default(autoincrement())
-  sacola      Sacola   @relation(fields: [sacolaId], references: [id])
-  sacolaId    Int
-  produto     Produto  @relation(fields: [produtoId], references: [id])
-  produtoId   Int
-  quantidade  Int
+  id         Int     @id @default(autoincrement())
+  sacola     Sacola  @relation(fields: [sacolaId], references: [id])
+  sacolaId   Int
+  produto    Produto @relation(fields: [produtoId], references: [id])
+  produtoId  Int
+  quantidade Int
 }
 
 model Favorito {
-  id          Int      @id @default(autoincrement())
-  usuario     Usuario @relation(fields: [usuarioId], references: [id])
-  usuarioId   Int
-  produto     Produto @relation(fields: [produtoId], references: [id])
-  produtoId   Int
+  id        Int     @id @default(autoincrement())
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+  usuarioId Int
+  produto   Produto @relation(fields: [produtoId], references: [id])
+  produtoId Int
 
   @@unique([usuarioId, produtoId])
 }
 
 model Pedido {
-  id          Int          @id @default(autoincrement())
-  usuario     Usuario      @relation(fields: [usuarioId], references: [id])
-  usuarioId   Int
-  status      String
-  total       Float
-  itens       PedidoItem[]
-  createdAt   DateTime     @default(now())
+  id             Int          @id @default(autoincrement())
+  usuario        Usuario      @relation(fields: [usuarioId], references: [id])
+  usuarioId      Int
+  status         String
+  total          Int          // Alterado para Int (armazenar em centavos)
+
+  // Snapshot do endereço de entrega (garante imutabilidade)
+  enderecoRua    String
+  enderecoNumero String
+  enderecoBairro String
+  enderecoCidade String
+  enderecoEstado String
+  enderecoCep    String
+
+  itens          PedidoItem[]
+  pagamentos     Pagamento[]  // Relação mapeada
+  createdAt      DateTime     @default(now())
 }
 
 model PedidoItem {
-  id          Int      @id @default(autoincrement())
-  pedido      Pedido   @relation(fields: [pedidoId], references: [id])
-  pedidoId    Int
-  produto     Produto  @relation(fields: [produtoId], references: [id])
-  produtoId   Int
-  quantidade  Int
-  preco       Float
+  id         Int     @id @default(autoincrement())
+  pedido     Pedido  @relation(fields: [pedidoId], references: [id])
+  pedidoId   Int
+  produto    Produto @relation(fields: [produtoId], references: [id])
+  produtoId  Int
+  quantidade Int
+  preco      Int     // Alterado para Int (armazenar em centavos)
 }
