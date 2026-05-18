@@ -6,6 +6,8 @@ import { ShoppingBag, Star, Truck, Heart, Share2, ShieldCheck } from "lucide-rea
 import { useSacola } from "../components/Item";
 import ClickSpark from "../components/ClickSpark";
 import BtnVoltar from "../components/BtnVoltar";
+import { useToast } from "../hooks/useToast";
+import Toast from "../components/Toast";
 
 const Skeleton = () => (
   <div className="min-h-screen bg-white animate-pulse flex items-center justify-center">
@@ -30,6 +32,7 @@ function ProdutoDesc() {
   const [quantidade, setQuantidade] = useState(1);
   const [adicionado, setAdicionado] = useState(false);
   const { adicionarItem } = useSacola();
+  const { toast, mostrar } = useToast();
 
   useEffect(() => {
     fetch(`http://localhost:3000/produtos/${id}`)
@@ -42,10 +45,24 @@ function ProdutoDesc() {
   }, [id]);
 
   function handleAdicionar() {
-    if (!produto) return;
+    if (!produto) {
+      mostrar("Produto não encontrado.", "erro");
+      return;
+    }
+    const token = localStorage.getItem("token");
+    if (!token) {
+      mostrar("Você precisa estar logado para adicionar produtos à sacola.", "erro");
+      return;
+    }
     for (let i = 0; i < quantidade; i++) adicionarItem(produto);
     setAdicionado(true);
     setTimeout(() => setAdicionado(false), 2000);
+    mostrar("Produto adicionado à sacola!", "sucesso");
+  }
+
+  function copiarUrl() {
+    navigator.clipboard.writeText(window.location.href);
+    mostrar("Link copiado!", "sucesso");
   }
 
   if (loading) return <Skeleton />;
@@ -59,7 +76,9 @@ function ProdutoDesc() {
             <button className="p-3 rounded-full border border-stone-100 bg-white shadow-sm hover:text-red-500 transition-all">
               <Heart size={20} />
             </button>
-            <button className="p-3 rounded-full border border-stone-100 bg-white shadow-sm hover:text-blue-500 transition-all">
+            <button
+              className="p-3 rounded-full border border-stone-100 bg-white shadow-sm hover:text-blue-500 transition-all"
+              onClick={copiarUrl}>
               <Share2 size={20} />
             </button>
           </div>
@@ -170,6 +189,7 @@ function ProdutoDesc() {
           </div>
         </div>
       </div>
+      {toast && <Toast mensagem={toast.mensagem} tipo={toast.tipo} />}
     </section>
   );
 }

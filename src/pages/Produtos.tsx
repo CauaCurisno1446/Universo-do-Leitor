@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { useSacola } from "../components/Item";
 import Produto from "../components/Produto";
+import { useToast } from "../hooks/useToast";
+import Toast from "../components/Toast";
 
 interface Filters {
   emEstoque: boolean;
@@ -26,6 +28,7 @@ function Produtos() {
     categorias: ["Livros", "Acessórios", "Luminárias"],
   });
   const { adicionarItem } = useSacola();
+  const { toast, mostrar } = useToast();
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -66,6 +69,16 @@ function Produtos() {
   const produtosFiltrados = Array.isArray(produtos)
     ? produtos.filter((produto: any) => produto.nome.toLowerCase().includes(pesquisa.toLowerCase()))
     : [];
+
+  function handleAdicionarProduto(produto: any) {
+    const token = localStorage.getItem("token");
+    if (token) {
+      adicionarItem(produto);
+      mostrar("Produto adicionado à sacola!", "sucesso");
+    } else {
+      mostrar("Faça login para adicionar produtos à sacola.", "aviso");
+    }
+  }
 
   return (
     <section className="w-full h-auto bg-white">
@@ -109,12 +122,13 @@ function Produtos() {
                 nome={produto.nome}
                 preco={produto.preco}
                 descricao={produto.descricao}
-                onCriar={() => adicionarItem(produto)}
+                onCriar={() => handleAdicionarProduto(produto)}
               />
             ))}
           </div>
         </div>
       </div>
+      {toast && <Toast mensagem={toast.mensagem} tipo={toast.tipo} />}
     </section>
   );
 }

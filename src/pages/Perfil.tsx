@@ -5,6 +5,8 @@ import Modal from "../components/Modal";
 import { LogOut, RectangleEllipsis, Shield, SquarePen, Phone, Mail, Calendar, MapPin } from "lucide-react";
 import { InputTexto } from "../components/InputTexto";
 import { useFormEditar } from "../hooks/useFormEditar";
+import { useToast } from "../hooks/useToast";
+import Toast from "../components/Toast";
 
 function Perfil() {
   const [usuario, setUsuario] = useState<any>(null);
@@ -15,6 +17,8 @@ function Perfil() {
   const modalEditar = useModal();
   const modalSenha = useModal();
   const modalSair = useModal();
+
+  const { toast, mostrar } = useToast();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -74,6 +78,7 @@ function Perfil() {
           setUsuario(data);
           modalEditar.fechar();
         });
+      mostrar("Perfil atualizado com sucesso!", "sucesso");
     } else {
       console.log("Usuário não autenticado");
     }
@@ -266,6 +271,7 @@ function Perfil() {
           <LogOut size={18} />
           Sair
         </button>
+        {toast && <Toast mensagem={toast.mensagem} tipo={toast.tipo} />}
       </main>
     </div>
   );

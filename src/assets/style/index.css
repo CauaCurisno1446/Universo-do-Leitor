@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
-:root{
-  --marrom: #57342D;
+:root {
+  --marrom: #57342d;
   --laranja: #df6d56;
   --bege: #cfd3c2;
-  --branco: #F5F5F5;
+  --branco: #f5f5f5;
   --header: #f9fdea;
   --cinza: #f0f0f0;
 }
@@ -14,19 +14,34 @@
   src: url("../fonts/Gotu-Regular.ttf") format("truetype");
 }
 
-*{
+* {
   margin: 0;
 }
 
-#logo{
+#logo {
   font-size: 32px;
   font-family: "Logo", sans-serif;
 }
 
-#Texto{
+#Texto {
   font-family: "Logo", sans-serif;
 }
 
-#Filtro{
+#Filtro {
   font-family: "Logo", sans-serif;
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@utility animate-slide-in {
+  animation: slide-in 0.3s ease-out;
 }
