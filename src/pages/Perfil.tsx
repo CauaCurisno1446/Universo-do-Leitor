@@ -29,6 +29,7 @@ function Perfil() {
 
   const modalEditar = useModal();
   const modalSenha = useModal();
+  const modalEndereco = useModal();
   const modalSair = useModal();
 
   const { toast, mostrar } = useToast();
@@ -38,6 +39,15 @@ function Perfil() {
   const senhasNaoBatem = confirmar && senha !== confirmar;
 
   const [favoritos, setFavoritos] = useState<any[]>([]);
+  const [enderecos, setEnderecos] = useState<any[]>([]);
+
+  const [cep, setCep] = useState("");
+  const [rua, setRua] = useState("");
+  const [numero, setNumero] = useState("");
+  const [complemento, setComplemento] = useState("");
+  const [bairro, setBairro] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [estado, setEstado] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -78,6 +88,22 @@ function Perfil() {
       })
       .catch((error) => {
         console.error(error);
+      });
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    fetch("http://localhost:3000/enderecos", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setEnderecos(data);
       });
   }, []);
 
@@ -157,6 +183,63 @@ function Perfil() {
       modalSenha.fechar();
     } else {
       mostrar("Erro ao alterar senha", "erro");
+    }
+  }
+
+  async function buscarCep(valor: string) {
+    const cepLimpo = valor.replace(/\D/g, "");
+
+    setCep(cepLimpo);
+
+    if (cepLimpo.length !== 8) return;
+
+    const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+
+    const data = await response.json();
+
+    if (data.erro) {
+      mostrar("CEP não encontrado", "erro");
+      return;
+    } else {
+      setRua(data.logradouro || "");
+      setBairro(data.bairro || "");
+      setCidade(data.localidade || "");
+      setEstado(data.uf || "");
+    }
+  }
+
+  async function salvarEndereco() {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    try {
+      const response = await fetch("http://localhost:3000/enderecos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          cep,
+          rua,
+          numero,
+          complemento,
+          bairro,
+          cidade,
+          estado,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error();
+      }
+
+      mostrar("Endereço cadastrado!", "sucesso");
+    } catch (error) {
+      console.error(error);
+
+      mostrar("Erro ao cadastrar endereço", "erro");
     }
   }
 
@@ -278,6 +361,110 @@ function Perfil() {
         </Modal>
       )}
 
+      {/* MODAL ENDERECO */}
+      {modalEndereco.aberto && (
+        <Modal titulo="Alterar Endereço" onClose={modalEndereco.fechar}>
+          <div className="space-y-5">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">CEP</label>
+              <InputTexto
+                type="text"
+                value={cep}
+                onCriar={(e) => buscarCep(e.target.value)}
+                placeholder="00000-000"
+                id="cep"
+                name="cep"
+                required={true}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rua</label>
+              <InputTexto
+                type="text"
+                value={rua}
+                onCriar={(e) => setRua(e.target.value)}
+                placeholder="Rua"
+                id="rua"
+                name="rua"
+                required={true}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bairro</label>
+              <InputTexto
+                type="text"
+                value={bairro}
+                onCriar={(e) => setBairro(e.target.value)}
+                placeholder="Bairro"
+                id="bairro"
+                name="bairro"
+                required={true}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Cidade</label>
+              <InputTexto
+                type="text"
+                value={cidade}
+                onCriar={(e) => setCidade(e.target.value)}
+                placeholder="Cidade"
+                id="cidade"
+                name="cidade"
+                required={true}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Estado</label>
+              <InputTexto
+                type="text"
+                value={estado}
+                onCriar={(e) => setEstado(e.target.value)}
+                placeholder="Estado"
+                id="estado"
+                name="estado"
+                required={true}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Complemento</label>
+              <InputTexto
+                type="text"
+                value={complemento}
+                onCriar={(e) => setComplemento(e.target.value)}
+                placeholder="Complemento"
+                id="complemento"
+                name="complemento"
+                required={true}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Número</label>
+              <InputTexto
+                type="text"
+                value={numero}
+                onCriar={(e) => setNumero(e.target.value)}
+                placeholder="Número"
+                id="numero"
+                name="numero"
+                required={true}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-8 mt-6 border-t border-slate-100">
+            <button
+              onClick={modalEndereco.fechar}
+              className="px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer">
+              Cancelar
+            </button>
+            <button
+              className="px-6 py-2.5 text-sm font-medium bg-[var(--marrom)] hover:bg-[var(--laranja)] hover:shadow-lg hover:shadow-orange-900/20 text-white rounded-xl transition-all active:scale-95 cursor-pointer"
+              onClick={salvarEndereco}>
+              Atualizar Endereço
+            </button>
+          </div>
+        </Modal>
+      )}
+
       {/* MODAL SAIR */}
       {modalSair.aberto && (
         <Modal titulo="Sair da conta" onClose={modalSair.fechar}>
@@ -378,14 +565,28 @@ function Perfil() {
                   <MapPin size={22} />
                 </div>
                 <div>
-                  <p className="text-xs font-bold tracking-widest text-slate-400 uppercase mb-1">Endereço</p>
-                  <p className="text-base text-slate-500 font-medium italic">
-                    Não informado
-                    <button
-                      onClick={() => alert("botao de editar endereco")}
-                      className="cursor-pointer text-slate-500 pl-3">
+                  <p className="text-xs font-bold tracking-widest text-slate-400 uppercase mb-1">
+                    Endereço
+                    <button onClick={modalEndereco.abrir} className="cursor-pointer text-slate-500 pl-3">
                       <SquarePen size={15} />
                     </button>
+                  </p>
+                  <p className="text-base text-slate-500 font-medium italic">
+                    {enderecos.length > 0 ? (
+                      <div>
+                        <p className="text-base text-slate-800 font-medium">
+                          {enderecos[0].rua}, {enderecos[0].numero}
+                        </p>
+
+                        <p className="text-sm text-slate-500">
+                          {enderecos[0].bairro} - {enderecos[0].cidade}/{enderecos[0].estado}
+                        </p>
+
+                        <p className="text-sm text-slate-500">CEP: {enderecos[0].cep}</p>
+                      </div>
+                    ) : (
+                      <p className="text-base text-slate-500 font-medium italic">Não informado</p>
+                    )}
                   </p>
                 </div>
               </div>

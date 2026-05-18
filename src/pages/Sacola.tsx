@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingBag, X, CreditCard, Truck, CheckCircle } from "lucide-react";
 import { useSacola } from "../components/Item";
@@ -12,7 +12,7 @@ type MetodoPagamento = "pix" | "credito" | "boleto";
 function Sacola() {
   const { itens, removerItem, alterarQuantidade, total } = useSacola();
   const [metodoPagamento, setMetodoPagamento] = useState<MetodoPagamento>("pix");
-  const [endereco, setEndereco] = useState("");
+  const [enderecos, setEnderecos] = useState<any[]>([]);
   const [finalizado, setFinalizado] = useState(false);
   const navigate = useNavigate();
 
@@ -20,9 +20,25 @@ function Sacola() {
   const totalFinal = total + frete;
 
   function handleFinalizar() {
-    if (!endereco.trim() || itens.length === 0) return;
+    if (enderecos.length === 0 || itens.length === 0) return;
     setFinalizado(true);
   }
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    fetch("http://localhost:3000/enderecos", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setEnderecos(data);
+      });
+  }, []);
 
   if (finalizado) {
     return (
@@ -211,13 +227,29 @@ function Sacola() {
                   <Truck size={15} />
                   Endereço de entrega
                 </h2>
-                <textarea
-                  value={endereco}
-                  onChange={(e) => setEndereco(e.target.value)}
-                  placeholder="Rua, número, complemento, bairro, cidade - UF"
-                  rows={3}
-                  className="w-full text-sm border border-stone-200 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-[var(--marrom)] transition-colors placeholder:text-stone-300"
-                />
+
+                <p className="text-base text-slate-500 font-medium italic">
+                  {enderecos.length > 0 ? (
+                    <div>
+                      <p className="text-base text-slate-800 font-medium">
+                        {enderecos[0].rua}, {enderecos[0].numero}
+                      </p>
+
+                      <p className="text-sm text-slate-500">
+                        {enderecos[0].bairro} - {enderecos[0].cidade}/{enderecos[0].estado}
+                      </p>
+
+                      <p className="text-sm text-slate-500">CEP: {enderecos[0].cep}</p>
+
+                      <p className="text-sm text-slate-500">
+                        N°: {enderecos[0].numero}, {enderecos[0].complemento}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-base text-slate-500 font-medium italic">Não informado</p>
+                  )}
+                </p>
+
                 {total >= 100 ? (
                   <p className="text-xs text-green-600 font-semibold mt-1.5 flex items-center gap-1">
                     <CheckCircle size={12} /> Frete grátis para você!
@@ -258,7 +290,7 @@ function Sacola() {
                 <ClickSpark>
                   <button
                     onClick={handleFinalizar}
-                    disabled={!endereco.trim()}
+                    disabled={enderecos.length === 0}
                     className="mt-4 w-full bg-[var(--laranja)] text-white font-semibold py-3 rounded-xl hover:bg-white hover:text-[var(--marrom)] transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
                     Finalizar pedido →
                   </button>

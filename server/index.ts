@@ -208,6 +208,26 @@ app.get("/favoritos", autenticarToken, async (req: AuthRequest, res: Response) =
   }
 });
 
+app.get("/enderecos", autenticarToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const usuarioId = req.usuarioId!;
+
+    const enderecos = await prisma.endereco.findMany({
+      where: {
+        usuarioId,
+      },
+    });
+
+    res.json(enderecos);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao buscar endereços",
+    });
+  }
+});
+
 //POST
 app.post("/produtos", async (req: Request, res: Response) => {
   try {
@@ -352,6 +372,35 @@ app.post("/favoritos/:produtoId", autenticarToken, async (req: AuthRequest, res:
 
     res.status(500).json({
       error: "Erro ao favoritar produto",
+    });
+  }
+});
+
+app.post("/enderecos", autenticarToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const usuarioId = req.usuarioId!;
+
+    const { rua, numero, complemento, bairro, cidade, estado, cep } = req.body;
+
+    const endereco = await prisma.endereco.create({
+      data: {
+        usuarioId,
+        rua,
+        numero,
+        complemento,
+        bairro,
+        cidade,
+        estado,
+        cep,
+      },
+    });
+
+    res.json(endereco);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao cadastrar endereço",
     });
   }
 });
