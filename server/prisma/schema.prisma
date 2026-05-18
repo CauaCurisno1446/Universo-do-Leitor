@@ -100,13 +100,7 @@ model Pedido {
   status         String
   total          Int          // Alterado para Int (armazenar em centavos)
 
-  // Snapshot do endereço de entrega (garante imutabilidade)
-  enderecoRua    String
-  enderecoNumero String
-  enderecoBairro String
-  enderecoCidade String
-  enderecoEstado String
-  enderecoCep    String
+  enderecoEntrega String
 
   itens          PedidoItem[]
   pagamentos     Pagamento[]  // Relação mapeada

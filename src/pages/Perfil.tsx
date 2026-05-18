@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useModal } from "../hooks/useModal";
 import Modal from "../components/Modal";
-import { LogOut, RectangleEllipsis, Shield, SquarePen, Phone, Mail, Calendar, MapPin } from "lucide-react";
+import { LogOut, RectangleEllipsis, Shield, SquarePen, Phone, Mail, Calendar, MapPin, Package } from "lucide-react";
 import { InputTexto } from "../components/InputTexto";
 import { useFormEditar } from "../hooks/useFormEditar";
 import { useToast } from "../hooks/useToast";
@@ -169,6 +169,7 @@ function Perfil() {
                   id="editarTelefones"
                   name="editarTelefones"
                   required={false}
+                  maxLength={11}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -295,6 +296,15 @@ function Perfil() {
               Editar Informações
             </button>
           </div>
+
+          <div className="flex items-end self-stretch">
+            <button
+              className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 active:scale-95 transition-all cursor-pointer"
+              onClick={modalSair.abrir}>
+              <LogOut size={18} />
+              Desconectar da conta
+            </button>
+          </div>
         </section>
 
         <br />
@@ -337,7 +347,14 @@ function Perfil() {
                 </div>
                 <div>
                   <p className="text-xs font-bold tracking-widest text-slate-400 uppercase mb-1">Endereço</p>
-                  <p className="text-base text-slate-500 font-medium italic">Não informado</p>
+                  <p className="text-base text-slate-500 font-medium italic">
+                    Não informado
+                    <button
+                      onClick={() => alert("botao de editar endereco")}
+                      className="cursor-pointer text-slate-500 pl-3">
+                      <SquarePen size={15} />
+                    </button>
+                  </p>
                 </div>
               </div>
 
@@ -383,14 +400,14 @@ function Perfil() {
 
         <br />
 
-        <div className="flex justify-end">
-          <button
-            className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 active:scale-95 transition-all cursor-pointer"
-            onClick={modalSair.abrir}>
-            <LogOut size={18} />
-            Desconectar da conta
-          </button>
-        </div>
+        <section className="bg-white rounded-3xl p-8 sm:p-10 shadow-[0_2px_20px_rgb(0,0,0,0.04)] mb-8 flex flex-col md:flex-row items-center md:items-start gap-8 relative overflow-hidden">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-6 mb-8">
+            <div className="p-2 bg-slate-50 rounded-lg text-slate-400">
+              <Package size={24} />
+            </div>
+            <h2 className="text-xl font-bold text-slate-800">Pedidos</h2>
+          </div>
+        </section>
 
         {toast && <Toast mensagem={toast.mensagem} tipo={toast.tipo} />}
       </main>
