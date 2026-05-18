@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 
+import { autenticarToken, AuthRequest } from "./middleware/decoder.js";
 import autenticar from "./middleware/autenticar.js";
 
 dotenv.config();
@@ -98,11 +99,11 @@ app.get("/produtos/:id", async (req: Request, res: Response) => {
   }
 });
 
-app.get("/perfil", autenticar, async (req: any, res: Response) => {
+app.get("/perfil", autenticarToken, async (req: AuthRequest, res: Response) => {
   try {
     const usuario = await prisma.usuario.findUnique({
       where: {
-        id: req.usuario.id,
+        id: req.usuarioId,
       },
 
       select: {
@@ -155,6 +156,54 @@ app.get("/sacola", autenticar, async (req: any, res: Response) => {
 
     res.status(500).json({
       error: "Erro ao buscar sacola",
+    });
+  }
+});
+
+app.get("/favoritos/verificar/:produtoId", autenticarToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const usuarioId = req.usuarioId!;
+    const produtoId = Number(req.params.produtoId);
+
+    const favorito = await prisma.favorito.findFirst({
+      where: {
+        usuarioId,
+        produtoId,
+      },
+    });
+
+    res.json({
+      favoritado: !!favorito,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao verificar favorito",
+    });
+  }
+});
+
+app.get("/favoritos", autenticarToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const usuarioId = req.usuarioId!;
+
+    const favoritos = await prisma.favorito.findMany({
+      where: {
+        usuarioId,
+      },
+
+      include: {
+        produto: true,
+      },
+    });
+
+    res.json(favoritos);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao buscar favoritos",
     });
   }
 });
@@ -285,6 +334,28 @@ app.post("/login", async (req: Request, res: Response) => {
   }
 });
 
+app.post("/favoritos/:produtoId", autenticarToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const usuarioId = req.usuarioId!;
+    const produtoId = Number(req.params.produtoId);
+
+    const favorito = await prisma.favorito.create({
+      data: {
+        usuarioId,
+        produtoId,
+      },
+    });
+
+    res.json(favorito);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao favoritar produto",
+    });
+  }
+});
+
 //PUT
 app.put("/produtos/:id", async (req: Request, res: Response) => {
   try {
@@ -394,6 +465,30 @@ app.delete("/produtos/:id", async (req: Request, res: Response) => {
 
     res.status(500).json({
       error: "Erro ao deletar produto",
+    });
+  }
+});
+
+app.delete("/favoritos/:produtoId", autenticarToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const usuarioId = req.usuarioId!;
+    const produtoId = Number(req.params.produtoId);
+
+    await prisma.favorito.deleteMany({
+      where: {
+        usuarioId,
+        produtoId,
+      },
+    });
+
+    res.json({
+      mensagem: "Favorito removido",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao remover favorito",
     });
   }
 });

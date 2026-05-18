@@ -31,6 +31,7 @@ function ProdutoDesc() {
   const [loading, setLoading] = useState(true);
   const [quantidade, setQuantidade] = useState(1);
   const [adicionado, setAdicionado] = useState(false);
+  const [favoritado, setFavoritado] = useState(false);
   const { adicionarItem } = useSacola();
   const { toast, mostrar } = useToast();
 
@@ -42,6 +43,20 @@ function ProdutoDesc() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  }, [id]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    fetch(`http://localhost:3000/favoritos/verificar/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setFavoritado(data.favoritado))
+      .catch(() => {});
   }, [id]);
 
   function handleAdicionar() {
@@ -65,6 +80,39 @@ function ProdutoDesc() {
     mostrar("Link copiado!", "sucesso");
   }
 
+  function favoritar(produtoId?: number) {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      mostrar("Você precisa estar logado para favoritar produtos.", "erro");
+      return;
+    }
+
+    if (favoritado) {
+      fetch(`http://localhost:3000/favoritos/${produtoId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setFavoritado(false);
+
+      mostrar("Produto removido dos favoritos.", "sucesso");
+    } else {
+      fetch(`http://localhost:3000/favoritos/${produtoId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setFavoritado(true);
+
+      mostrar("Produto adicionado aos favoritos!", "sucesso");
+    }
+  }
+
   if (loading) return <Skeleton />;
 
   return (
@@ -73,11 +121,17 @@ function ProdutoDesc() {
         <div className="flex justify-between items-center mb-12">
           <BtnVoltar label="Voltar à galeria" />
           <div className="flex gap-3">
-            <button className="p-3 rounded-full border border-stone-100 bg-white shadow-sm hover:text-red-500 transition-all">
-              <Heart size={20} />
-            </button>
+            <ClickSpark sparkColor="red">
+              <button
+                className={`p-3 rounded-full border border-stone-100 bg-white shadow-sm transition-all cursor-pointer ${
+                  favoritado ? "text-red-500 bg-red-50" : "hover:text-red-500"
+                }`}
+                onClick={() => favoritar(produto?.id)}>
+                <Heart size={20} className={favoritado ? "fill-red-500" : ""} />
+              </button>
+            </ClickSpark>
             <button
-              className="p-3 rounded-full border border-stone-100 bg-white shadow-sm hover:text-blue-500 transition-all"
+              className="p-3 rounded-full border border-stone-100 bg-white shadow-sm hover:text-blue-500 transition-all cursor-pointer"
               onClick={copiarUrl}>
               <Share2 size={20} />
             </button>

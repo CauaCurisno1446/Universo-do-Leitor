@@ -2,7 +2,18 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useModal } from "../hooks/useModal";
 import Modal from "../components/Modal";
-import { LogOut, RectangleEllipsis, Shield, SquarePen, Phone, Mail, Calendar, MapPin, Package } from "lucide-react";
+import {
+  LogOut,
+  RectangleEllipsis,
+  Shield,
+  SquarePen,
+  Phone,
+  Mail,
+  Calendar,
+  MapPin,
+  Package,
+  Heart,
+} from "lucide-react";
 import { InputTexto } from "../components/InputTexto";
 import { useFormEditar } from "../hooks/useFormEditar";
 import { useToast } from "../hooks/useToast";
@@ -26,6 +37,8 @@ function Perfil() {
   const [confirmar, setConfirmar] = useState("");
   const senhasNaoBatem = confirmar && senha !== confirmar;
 
+  const [favoritos, setFavoritos] = useState<any[]>([]);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -46,6 +59,25 @@ function Perfil() {
       })
       .then((data) => {
         if (data) setUsuario(data);
+      });
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    fetch("http://localhost:3000/favoritos", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setFavoritos(data);
+      })
+      .catch((error) => {
+        console.error(error);
       });
   }, []);
 
@@ -406,6 +438,51 @@ function Perfil() {
               <Package size={24} />
             </div>
             <h2 className="text-xl font-bold text-slate-800">Pedidos</h2>
+          </div>
+        </section>
+
+        <br />
+
+        <section className="bg-white rounded-3xl p-8 sm:p-10 shadow-[0_2px_20px_rgb(0,0,0,0.04)] mb-8 flex flex-col md:flex-row items-center md:items-start gap-8 relative overflow-hidden">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-6 mb-8">
+            <div className="p-2 bg-slate-50 rounded-lg text-slate-400">
+              <Heart size={24} />
+            </div>
+            <h2 className="text-xl font-bold text-slate-800">Favoritos</h2>
+          </div>
+          <br />
+          <div className="w-full pt-4">
+            {favoritos.length === 0 ? (
+              <p className="text-sm text-slate-500 italic">Você ainda não adicionou nenhum produto aos favoritos.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {favoritos.map((favorito) => (
+                  <div
+                    key={favorito.id}
+                    className="border border-slate-100 rounded-2xl overflow-hidden bg-white hover:shadow-lg transition-all">
+                    <img
+                      src={favorito.produto.imagemUrl}
+                      alt={favorito.produto.nome}
+                      className="w-full h-52 object-cover"
+                    />
+
+                    <div className="p-10">
+                      <h3 className="font-bold text-slate-800 text-lg mb-2">{favorito.produto.nome}</h3>
+
+                      <br />
+
+                      <div className="flex justify-between items-center">
+                        <button
+                          onClick={() => navigate(`/produtos/${favorito.produto.id}`)}
+                          className="px-4 py-2 rounded-xl bg-[var(--marrom)] text-white text-sm hover:bg-[var(--laranja)] transition-all w-full cursor-pointer">
+                          Ver produto
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
