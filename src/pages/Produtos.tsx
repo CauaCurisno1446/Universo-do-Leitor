@@ -4,7 +4,6 @@ import Fundo from "../assets/img/background_2.png";
 import FilterBar from "../components/Filters";
 import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
-import { useSacola } from "../components/Item";
 import Produto from "../components/Produto";
 import { useToast } from "../hooks/useToast";
 import Toast from "../components/Toast";
@@ -27,7 +26,7 @@ function Produtos() {
     precoMax: 1000,
     categorias: ["Livros", "Acessórios", "Luminárias"],
   });
-  const { adicionarItem } = useSacola();
+
   const { toast, mostrar } = useToast();
 
   useEffect(() => {
@@ -70,13 +69,40 @@ function Produtos() {
     ? produtos.filter((produto: any) => produto.nome.toLowerCase().includes(pesquisa.toLowerCase()))
     : [];
 
-  function handleAdicionarProduto(produto: any) {
+  async function handleAdicionarProduto(produto: any) {
     const token = localStorage.getItem("token");
-    if (token) {
-      adicionarItem(produto);
-      mostrar("Produto adicionado à sacola!", "sucesso");
-    } else {
+
+    if (!token) {
       mostrar("Faça login para adicionar produtos à sacola.", "aviso");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:3000/sacola/adicionar", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+
+        body: JSON.stringify({
+          produtoId: produto.id,
+          quantidade: 1,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error();
+      }
+
+      window.dispatchEvent(new Event("sacolaAtualizada"));
+
+      mostrar("Produto adicionado à sacola!", "sucesso");
+    } catch (error) {
+      console.error(error);
+
+      mostrar("Erro ao adicionar produto.", "erro");
     }
   }
 

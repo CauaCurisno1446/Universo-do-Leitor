@@ -228,6 +228,34 @@ app.get("/enderecos", autenticarToken, async (req: AuthRequest, res: Response) =
   }
 });
 
+app.get("/sacola", autenticarToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const usuarioId = req.usuarioId!;
+
+    const sacola = await prisma.sacola.findUnique({
+      where: {
+        usuarioId,
+      },
+
+      include: {
+        itens: {
+          include: {
+            produto: true,
+          },
+        },
+      },
+    });
+
+    res.json(sacola);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao buscar sacola",
+    });
+  }
+});
+
 //POST
 app.post("/produtos", async (req: Request, res: Response) => {
   try {
@@ -405,6 +433,65 @@ app.post("/enderecos", autenticarToken, async (req: AuthRequest, res: Response) 
   }
 });
 
+app.post("/sacola/adicionar", autenticarToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const usuarioId = req.usuarioId!;
+
+    const { produtoId, quantidade } = req.body;
+
+    let sacola = await prisma.sacola.findUnique({
+      where: {
+        usuarioId,
+      },
+    });
+
+    if (!sacola) {
+      sacola = await prisma.sacola.create({
+        data: {
+          usuarioId,
+        },
+      });
+    }
+
+    const itemExistente = await prisma.sacolaItem.findFirst({
+      where: {
+        sacolaId: sacola.id,
+        produtoId,
+      },
+    });
+
+    if (itemExistente) {
+      const itemAtualizado = await prisma.sacolaItem.update({
+        where: {
+          id: itemExistente.id,
+        },
+
+        data: {
+          quantidade: itemExistente.quantidade + quantidade,
+        },
+      });
+
+      return res.json(itemAtualizado);
+    }
+
+    const novoItem = await prisma.sacolaItem.create({
+      data: {
+        sacolaId: sacola.id,
+        produtoId,
+        quantidade,
+      },
+    });
+
+    res.json(novoItem);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao adicionar item na sacola",
+    });
+  }
+});
+
 //PUT
 app.put("/produtos/:id", async (req: Request, res: Response) => {
   try {
@@ -497,6 +584,44 @@ app.put("/perfil/senha/:id", async (req: Request, res: Response) => {
   }
 });
 
+app.put("/sacola/item/:id", autenticarToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const itemId = Number(req.params.id);
+
+    const { quantidade } = req.body;
+
+    if (quantidade <= 0) {
+      await prisma.sacolaItem.delete({
+        where: {
+          id: itemId,
+        },
+      });
+
+      return res.json({
+        removido: true,
+      });
+    }
+
+    const itemAtualizado = await prisma.sacolaItem.update({
+      where: {
+        id: itemId,
+      },
+
+      data: {
+        quantidade,
+      },
+    });
+
+    res.json(itemAtualizado);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao atualizar quantidade",
+    });
+  }
+});
+
 //DELETE
 app.delete("/produtos/:id", async (req: Request, res: Response) => {
   try {
@@ -538,6 +663,28 @@ app.delete("/favoritos/:produtoId", autenticarToken, async (req: AuthRequest, re
 
     res.status(500).json({
       error: "Erro ao remover favorito",
+    });
+  }
+});
+
+app.delete("/sacola/item/:id", autenticarToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const itemId = Number(req.params.id);
+
+    await prisma.sacolaItem.delete({
+      where: {
+        id: itemId,
+      },
+    });
+
+    res.json({
+      mensagem: "Item removido",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao remover item",
     });
   }
 });

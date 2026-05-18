@@ -2,27 +2,128 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingBag, X, CreditCard, Truck, CheckCircle } from "lucide-react";
-import { useSacola } from "../components/Item";
+import { ShoppingBag, X, CreditCard, Truck, CheckCircle, FileText } from "lucide-react";
 import ClickSpark from "../components/ClickSpark";
 import BtnVoltar from "../components/BtnVoltar";
+import Pix from "../assets/img/pix.png";
 
 type MetodoPagamento = "pix" | "credito" | "boleto";
 
 function Sacola() {
-  const { itens, removerItem, alterarQuantidade, total } = useSacola();
+  const [itens, setItens] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
   const [metodoPagamento, setMetodoPagamento] = useState<MetodoPagamento>("pix");
   const [enderecos, setEnderecos] = useState<any[]>([]);
   const [finalizado, setFinalizado] = useState(false);
+
   const navigate = useNavigate();
 
-  const frete = total >= 100 ? 0 : 12.9;
+  const frete = total >= 10000 ? 0 : 1290;
   const totalFinal = total + frete;
+
+  async function buscarSacola() {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    try {
+      const response = await fetch("http://localhost:3000/sacola", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      const itensFormatados =
+        data?.itens?.map((item: any) => ({
+          sacolaItemId: item.id,
+          quantidade: item.quantidade,
+          ...item.produto,
+        })) || [];
+
+      setItens(itensFormatados);
+
+      const totalCalculado = itensFormatados.reduce((acc: number, item: any) => acc + item.preco * item.quantidade, 0);
+
+      setTotal(totalCalculado);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function removerItem(itemId: number) {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    try {
+      await fetch(`http://localhost:3000/sacola/item/${itemId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      buscarSacola();
+
+      window.dispatchEvent(new Event("sacolaAtualizada"));
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function alterarQuantidade(itemId: number, quantidade: number) {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    if (quantidade < 1) {
+      removerItem(itemId);
+      return;
+    }
+
+    try {
+      await fetch(`http://localhost:3000/sacola/item/${itemId}`, {
+        method: "PUT",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+
+        body: JSON.stringify({
+          quantidade,
+        }),
+      });
+
+      buscarSacola();
+
+      window.dispatchEvent(new Event("sacolaAtualizada"));
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   function handleFinalizar() {
     if (enderecos.length === 0 || itens.length === 0) return;
+
     setFinalizado(true);
   }
+
+  useEffect(() => {
+    buscarSacola();
+
+    const atualizarSacola = () => {
+      buscarSacola();
+    };
+
+    window.addEventListener("sacolaAtualizada", atualizarSacola);
+
+    return () => {
+      window.removeEventListener("sacolaAtualizada", atualizarSacola);
+    };
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -47,12 +148,15 @@ function Sacola() {
           <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center">
             <CheckCircle size={40} className="text-green-500" />
           </div>
+
           <h1 className="text-2xl font-bold text-[var(--marrom)]" id="Texto">
             Pedido confirmado!
           </h1>
+
           <p className="text-stone-500 text-sm leading-relaxed">
             Seu pedido foi realizado com sucesso. Você receberá uma confirmação em breve.
           </p>
+
           <button
             onClick={() => navigate("/produtos")}
             className="bg-[var(--laranja)] text-white font-semibold px-6 py-3 rounded-xl hover:bg-[var(--marrom)] transition-colors duration-200 cursor-pointer">
@@ -65,7 +169,7 @@ function Sacola() {
 
   return (
     <section className="min-h-screen bg-[var(--branco)]">
-      <div className=" mx-auto px-4 md:px-10 py-8 md:py-14">
+      <div className="mx-auto px-4 md:px-10 py-8 md:py-14">
         <BtnVoltar label="Continuar comprando" />
 
         <br />
@@ -77,7 +181,9 @@ function Sacola() {
         {itens.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-5 py-24">
             <ShoppingBag size={48} className="text-stone-200" />
+
             <p className="text-stone-400 text-sm">Sua sacola está vazia.</p>
+
             <button
               onClick={() => navigate("/produtos")}
               className="bg-[var(--laranja)] text-white font-semibold px-6 py-3 rounded-xl hover:bg-[var(--marrom)] transition-colors cursor-pointer text-sm">
@@ -96,30 +202,38 @@ function Sacola() {
                     alt={item.nome}
                     className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-xl shrink-0"
                   />
+
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-[var(--marrom)] text-sm md:text-base truncate" id="Texto">
                       {item.nome}
                     </p>
+
                     <p className="text-base font-bold text-[var(--marrom)] mt-1">
-                      R$ {((item.preco / 100) * item.quantidade).toFixed(2)}
+                      {((item.preco * item.quantidade) / 100).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
                     </p>
 
                     <div className="flex items-center gap-2 mt-2">
                       <button
-                        onClick={() => alterarQuantidade(item.id, item.quantidade - 1)}
+                        onClick={() => alterarQuantidade(item.sacolaItemId, item.quantidade - 1)}
                         className="w-7 h-7 rounded-lg bg-[var(--cinza)] hover:bg-[var(--bege)] text-sm font-bold flex items-center justify-center cursor-pointer transition-colors">
                         −
                       </button>
+
                       <span className="w-6 text-center text-sm font-semibold">{item.quantidade}</span>
+
                       <button
-                        onClick={() => alterarQuantidade(item.id, item.quantidade + 1)}
+                        onClick={() => alterarQuantidade(item.sacolaItemId, item.quantidade + 1)}
                         className="w-7 h-7 rounded-lg bg-[var(--cinza)] hover:bg-[var(--bege)] text-sm font-bold flex items-center justify-center cursor-pointer transition-colors">
                         +
                       </button>
                     </div>
                   </div>
+
                   <button
-                    onClick={() => removerItem(item.id)}
+                    onClick={() => removerItem(item.sacolaItemId)}
                     className="text-stone-300 hover:text-red-400 transition-colors cursor-pointer shrink-0">
                     <X size={18} />
                   </button>
@@ -128,7 +242,6 @@ function Sacola() {
             </div>
 
             <div className="flex flex-col gap-5">
-              {/* Método de pagamento */}
               <div className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm">
                 <h2 className="font-bold text-[var(--marrom)] text-sm mb-4" id="Texto">
                   Método de pagamento
@@ -143,26 +256,22 @@ function Sacola() {
                   <input
                     type="radio"
                     name="pagamento"
-                    value="pix"
                     checked={metodoPagamento === "pix"}
                     onChange={() => setMetodoPagamento("pix")}
                     className="accent-[var(--marrom)]"
                   />
+
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#32bcad] flex items-center justify-center shrink-0">
-                      <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
-                        <path d="M16 3L28 10V22L16 29L4 22V10L16 3Z" fill="white" fillOpacity="0.3" />
-                        <path
-                          d="M10.5 16L13.5 13L16 15.5L18.5 13L21.5 16L18.5 19L16 16.5L13.5 19L10.5 16Z"
-                          fill="white"
-                        />
-                      </svg>
+                    <div className="bg-[#53b8af] w-[40px] h-[40px] flex justify-center items-center rounded-[10px]">
+                      <img src={Pix} alt="PIX" className="w-6 h-6" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-[var(--marrom)]">PIX</p>
+
                       <p className="text-xs text-stone-400">Aprovação imediata</p>
                     </div>
                   </div>
+
                   {metodoPagamento === "pix" && (
                     <span className="ml-auto text-xs text-green-600 font-semibold">5% OFF</span>
                   )}
@@ -177,17 +286,18 @@ function Sacola() {
                   <input
                     type="radio"
                     name="pagamento"
-                    value="credito"
                     checked={metodoPagamento === "credito"}
                     onChange={() => setMetodoPagamento("credito")}
                     className="accent-[var(--marrom)]"
                   />
+
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[var(--marrom)] flex items-center justify-center shrink-0">
-                      <CreditCard size={16} color="white" />
+                    <div className="bg-[var(--marrom)] w-[40px] h-[40px] flex justify-center items-center rounded-[10px]">
+                      <CreditCard size={20} color="white" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-[var(--marrom)]">Cartão de crédito</p>
+
                       <p className="text-xs text-stone-400">Até 6x sem juros</p>
                     </div>
                   </div>
@@ -202,20 +312,18 @@ function Sacola() {
                   <input
                     type="radio"
                     name="pagamento"
-                    value="boleto"
                     checked={metodoPagamento === "boleto"}
                     onChange={() => setMetodoPagamento("boleto")}
                     className="accent-[var(--marrom)]"
                   />
+
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-stone-400 flex items-center justify-center shrink-0">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                        <rect x="2" y="4" width="20" height="16" rx="2" />
-                        <path d="M6 8v8M10 8v8M14 8v8M18 8v8" />
-                      </svg>
+                    <div className="bg-blue-300 w-[40px] h-[40px] flex justify-center items-center rounded-[10px]">
+                      <FileText size={20} color="white" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-[var(--marrom)]">Boleto bancário</p>
+
                       <p className="text-xs text-stone-400">Vence em 3 dias úteis</p>
                     </div>
                   </div>
@@ -228,31 +336,26 @@ function Sacola() {
                   Endereço de entrega
                 </h2>
 
-                <p className="text-base text-slate-500 font-medium italic">
-                  {enderecos.length > 0 ? (
-                    <div>
-                      <p className="text-base text-slate-800 font-medium">
-                        {enderecos[0].rua}, {enderecos[0].numero}
-                      </p>
+                {enderecos.length > 0 ? (
+                  <div>
+                    <p className="text-base text-slate-800 font-medium">
+                      {enderecos[0].rua}, {enderecos[0].numero}
+                    </p>
 
-                      <p className="text-sm text-slate-500">
-                        {enderecos[0].bairro} - {enderecos[0].cidade}/{enderecos[0].estado}
-                      </p>
+                    <p className="text-sm text-slate-500">
+                      {enderecos[0].bairro} - {enderecos[0].cidade}/{enderecos[0].estado}
+                    </p>
 
-                      <p className="text-sm text-slate-500">CEP: {enderecos[0].cep}</p>
+                    <p className="text-sm text-slate-500">CEP: {enderecos[0].cep}</p>
+                  </div>
+                ) : (
+                  <p className="text-base text-slate-500 font-medium italic">Não informado</p>
+                )}
 
-                      <p className="text-sm text-slate-500">
-                        N°: {enderecos[0].numero}, {enderecos[0].complemento}
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-base text-slate-500 font-medium italic">Não informado</p>
-                  )}
-                </p>
-
-                {total >= 100 ? (
+                {total >= 10000 ? (
                   <p className="text-xs text-green-600 font-semibold mt-1.5 flex items-center gap-1">
-                    <CheckCircle size={12} /> Frete grátis para você!
+                    <CheckCircle size={12} />
+                    Frete grátis para você!
                   </p>
                 ) : (
                   <p className="text-xs text-stone-400 mt-1.5">Frete R$ 12,90 · Grátis acima de R$ 100</p>
@@ -263,34 +366,66 @@ function Sacola() {
                 <h2 className="font-bold text-sm mb-4" id="Texto">
                   Resumo do pedido
                 </h2>
+
                 <div className="flex flex-col gap-2 text-sm text-white/80">
                   <div className="flex justify-between">
                     <span>
                       Subtotal ({itens.length} {itens.length === 1 ? "item" : "itens"})
                     </span>
-                    <span>R$ {(total / 100).toFixed(2)}</span>
+
+                    <span>
+                      {(total / 100).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
+                    </span>
                   </div>
+
                   <div className="flex justify-between">
                     <span>Frete</span>
-                    <span>{frete === 0 ? "Grátis" : `R$ ${frete.toFixed(2)}`}</span>
+
+                    <span>
+                      {frete === 0
+                        ? "Grátis"
+                        : (frete / 100).toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          })}
+                    </span>
                   </div>
+
                   {metodoPagamento === "pix" && (
                     <div className="flex justify-between text-green-300">
                       <span>Desconto PIX (5%)</span>
-                      <span>− R$ {((total * 0.05) / 100).toFixed(2)}</span>
+
+                      <span>
+                        −{" "}
+                        {((total * 0.05) / 100).toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
+                      </span>
                     </div>
                   )}
                 </div>
+
                 <div className="border-t border-white/20 my-3" />
+
                 <div className="flex justify-between font-bold text-base">
                   <span id="Texto">Total</span>
-                  <span>R$ {((metodoPagamento === "pix" ? totalFinal * 0.95 : totalFinal) / 100).toFixed(2)}</span>
+
+                  <span>
+                    {((metodoPagamento === "pix" ? totalFinal * 0.95 : totalFinal) / 100).toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}
+                  </span>
                 </div>
 
                 <ClickSpark>
                   <button
                     onClick={handleFinalizar}
-                    disabled={enderecos.length === 0}
+                    disabled={enderecos.length === 0 || itens.length === 0}
                     className="mt-4 w-full bg-[var(--laranja)] text-white font-semibold py-3 rounded-xl hover:bg-white hover:text-[var(--marrom)] transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
                     Finalizar pedido →
                   </button>

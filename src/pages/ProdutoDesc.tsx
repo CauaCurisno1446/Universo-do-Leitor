@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ShoppingBag, Star, Truck, Heart, Share2, ShieldCheck } from "lucide-react";
-import { useSacola } from "../components/Item";
 import ClickSpark from "../components/ClickSpark";
 import BtnVoltar from "../components/BtnVoltar";
 import { useToast } from "../hooks/useToast";
@@ -32,7 +31,6 @@ function ProdutoDesc() {
   const [quantidade, setQuantidade] = useState(1);
   const [adicionado, setAdicionado] = useState(false);
   const [favoritado, setFavoritado] = useState(false);
-  const { adicionarItem } = useSacola();
   const { toast, mostrar } = useToast();
 
   useEffect(() => {
@@ -59,20 +57,50 @@ function ProdutoDesc() {
       .catch(() => {});
   }, [id]);
 
-  function handleAdicionar() {
+  async function handleAdicionar() {
     if (!produto) {
       mostrar("Produto não encontrado.", "erro");
       return;
     }
+
     const token = localStorage.getItem("token");
+
     if (!token) {
       mostrar("Você precisa estar logado para adicionar produtos à sacola.", "erro");
       return;
     }
-    for (let i = 0; i < quantidade; i++) adicionarItem(produto);
-    setAdicionado(true);
-    setTimeout(() => setAdicionado(false), 2000);
-    mostrar("Produto adicionado à sacola!", "sucesso");
+
+    try {
+      const response = await fetch("http://localhost:3000/sacola/adicionar", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+
+        body: JSON.stringify({
+          produtoId: produto.id,
+          quantidade,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error();
+      }
+
+      window.dispatchEvent(new Event("sacolaAtualizada"));
+
+      setAdicionado(true);
+
+      setTimeout(() => setAdicionado(false), 2000);
+
+      mostrar("Produto adicionado à sacola!", "sucesso");
+    } catch (error) {
+      console.error(error);
+
+      mostrar("Erro ao adicionar produto.", "erro");
+    }
   }
 
   function copiarUrl() {

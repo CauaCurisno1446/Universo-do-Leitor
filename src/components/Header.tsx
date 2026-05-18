@@ -1,8 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { User, ShoppingBag, X, Menu } from "lucide-react";
 import Logo from "./Logo";
-import { useState } from "react";
-import { useSacola } from "./Item";
+import { useEffect, useState } from "react";
 
 const navItem =
   "font-semibold hover:text-[var(--laranja)] duration-200 ease-in-out text-sm tracking-wide relative after:absolute after:bottom-[-2px] after:left-0 after:w-0 after:h-[2px] after:bg-[var(--laranja)] after:transition-all hover:after:w-full";
@@ -10,7 +9,9 @@ const navItem =
 function Header() {
   const [sacola, setSacola] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
-  const { itens, removerItem, alterarQuantidade, total } = useSacola();
+  const [itens, setItens] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+
   const navigate = useNavigate();
 
   function handleUsuario() {
@@ -30,6 +31,98 @@ function Header() {
       navigate("/login");
     }
   }
+
+  async function buscarSacola() {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    try {
+      const response = await fetch("http://localhost:3000/sacola", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      const itensFormatados =
+        data?.itens?.map((item: any) => ({
+          sacolaItemId: item.id,
+          quantidade: item.quantidade,
+          ...item.produto,
+        })) || [];
+
+      setItens(itensFormatados);
+
+      const totalCalculado = itensFormatados.reduce((acc: number, item: any) => acc + item.preco * item.quantidade, 0);
+
+      setTotal(totalCalculado);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function removerItem(itemId: number) {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    try {
+      await fetch(`http://localhost:3000/sacola/item/${itemId}`, {
+        method: "DELETE",
+
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      buscarSacola();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function alterarQuantidade(itemId: number, quantidade: number) {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    try {
+      await fetch(`http://localhost:3000/sacola/item/${itemId}`, {
+        method: "PUT",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+
+        body: JSON.stringify({
+          quantidade,
+        }),
+      });
+
+      buscarSacola();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  useEffect(() => {
+    buscarSacola();
+  }, []);
+
+  useEffect(() => {
+    function atualizarSacola() {
+      buscarSacola();
+    }
+
+    window.addEventListener("sacolaAtualizada", atualizarSacola);
+
+    return () => {
+      window.removeEventListener("sacolaAtualizada", atualizarSacola);
+    };
+  }, []);
 
   const token = localStorage.getItem("token");
 
@@ -124,20 +217,20 @@ function Header() {
                       </p>
                       <div className="flex items-center gap-2 mt-1">
                         <button
-                          onClick={() => alterarQuantidade(item.id, item.quantidade - 1)}
+                          onClick={() => alterarQuantidade(item.sacolaItemId, item.quantidade - 1)}
                           className="w-5 h-5 rounded-full bg-white hover:bg-[var(--bege)] text-xs font-bold flex items-center justify-center cursor-pointer border border-stone-200">
                           −
                         </button>
                         <span className="text-xs">{item.quantidade}</span>
                         <button
-                          onClick={() => alterarQuantidade(item.id, item.quantidade + 1)}
+                          onClick={() => alterarQuantidade(item.sacolaItemId, item.quantidade + 1)}
                           className="w-5 h-5 rounded-full bg-white hover:bg-[var(--bege)] text-xs font-bold flex items-center justify-center cursor-pointer border border-stone-200">
                           +
                         </button>
                       </div>
                     </div>
                     <button
-                      onClick={() => removerItem(item.id)}
+                      onClick={() => removerItem(item.sacolaItemId)}
                       className="text-stone-300 hover:text-red-400 duration-200 cursor-pointer shrink-0">
                       <X size={14} />
                     </button>
