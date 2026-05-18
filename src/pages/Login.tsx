@@ -57,6 +57,7 @@ function Login() {
               className=""
               id="email"
               name="email"
+              required={true}
             />
           </div>
 
@@ -68,6 +69,7 @@ function Login() {
               onCriar={(e) => setSenha(e.target.value)}
               id="senha"
               name="senha"
+              required={true}
             />
           </div>
 

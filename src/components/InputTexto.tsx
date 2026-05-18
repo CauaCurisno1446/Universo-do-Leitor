@@ -1,14 +1,15 @@
-type InputProps = {
+interface InputProps extends React.ComponentProps<"input"> {
   value: string;
   type?: string;
   placeholder: string;
   className?: string;
-  onCriar: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onCriar?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   id?: string;
   name?: string;
-};
+  required?: boolean;
+}
 
-function InputTexto({ value, type, placeholder, className, onCriar, id, name }: InputProps) {
+function InputTexto({ value, type, placeholder, className, onCriar, id, name, required }: InputProps) {
   return (
     <input
       type={type}
@@ -17,7 +18,7 @@ function InputTexto({ value, type, placeholder, className, onCriar, id, name }: 
       placeholder={placeholder}
       id={id}
       name={name}
-      required
+      required={required}
       className={`border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--marrom)] transition-colors placeholder:text-stone-300 bg-white ${className}`}
     />
   );

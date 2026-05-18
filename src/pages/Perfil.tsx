@@ -3,10 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useModal } from "../hooks/useModal";
 import Modal from "../components/Modal";
 import { LogOut, RectangleEllipsis, Shield, SquarePen, Phone, Mail, Calendar, MapPin } from "lucide-react";
+import { InputTexto } from "../components/InputTexto";
+import { useFormEditar } from "../hooks/useFormEditar";
 
 function Perfil() {
   const [usuario, setUsuario] = useState<any>(null);
   const navigate = useNavigate();
+
+  const { form, inicializar, handleChange } = useFormEditar(usuario);
 
   const modalEditar = useModal();
   const modalSenha = useModal();
@@ -49,18 +53,93 @@ function Perfil() {
     navigate("/");
   }
 
+  function abrirModalEditar() {
+    inicializar(usuario);
+    modalEditar.abrir();
+  }
+
+  function handleEditar() {
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetch(`http://localhost:3000/perfil/${usuario.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(form),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setUsuario(data);
+          modalEditar.fechar();
+        });
+    } else {
+      console.log("Usuário não autenticado");
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[var(--fundo)] text-slate-800 font-sans w-full flex justify-center items-center">
       {modalEditar.aberto && (
         <Modal titulo="Editar Perfil" onClose={modalEditar.fechar}>
-          <div className="flex flex-col gap-4">{/* inputs de edição aqui */}</div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Nome</label>
+            <InputTexto
+              type="text"
+              value={form.nome}
+              onCriar={(e) => handleChange("nome", e.target.value)}
+              placeholder="Insira seu nome"
+              id="editarNome"
+              name="editarNome"
+              required={false}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider">E-mail</label>
+            <InputTexto
+              type="text"
+              value={form.email}
+              onCriar={(e) => handleChange("email", e.target.value)}
+              placeholder="Insira seu e-mail"
+              id="editarEmail"
+              name="editarEmail"
+              required={false}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Telefone</label>
+            <InputTexto
+              type="text"
+              value={form.telefones}
+              onCriar={(e) => handleChange("telefones", e.target.value)}
+              placeholder="Insira seu telefone"
+              id="editarTelefones"
+              name="editarTelefones"
+              required={false}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider">CPF</label>
+            <InputTexto
+              type="text"
+              value={form.cpf}
+              onCriar={(e) => handleChange("cpf", e.target.value)}
+              placeholder="Insira seu CPF"
+              id="editarCpf"
+              name="editarCpf"
+              required={false}
+            />
+          </div>
           <div className="flex justify-end gap-3 pt-6">
             <button
               onClick={modalEditar.fechar}
               className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer">
               Cancelar
             </button>
-            <button className="px-5 py-2 text-sm bg-[var(--marrom)] hover:bg-[var(--laranja)] text-white rounded-lg transition-colors cursor-pointer">
+            <button
+              onClick={handleEditar}
+              className="px-5 py-2 text-sm bg-[var(--marrom)] hover:bg-[var(--laranja)] text-white rounded-lg transition-colors cursor-pointer">
               Salvar
             </button>
           </div>
@@ -91,7 +170,6 @@ function Perfil() {
               className="px-4 py-2 w-full text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer">
               Cancelar
             </button>
-            {/* ✅ chama handleSair em vez de só navegar */}
             <button
               onClick={handleSair}
               className="px-5 py-2 text-sm bg-[var(--marrom)] w-full hover:bg-[var(--laranja)] text-white rounded-lg transition-colors cursor-pointer">
@@ -108,9 +186,12 @@ function Perfil() {
           </div>
           <div className="w-full text-center md:text-left flex flex-col items-center md:items-start">
             <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-2">{usuario.nome}</h1>
-            <p className="text-lg text-slate-500 mb-6">{usuario.cpf}</p>
+            <p className="text-lg text-slate-500 mb-6">{usuario.cpf || "cpf"}</p>
+
+            <br />
+
             <button
-              onClick={modalEditar.abrir}
+              onClick={abrirModalEditar}
               className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold bg-[var(--marrom)] text-white hover:bg-[var(--laranja)] active:scale-95 transition-all cursor-pointer">
               <SquarePen size={18} />
               Editar Informações
@@ -139,7 +220,7 @@ function Perfil() {
                 <Phone className="text-slate-400 mt-0.5" size={20} />
                 <div>
                   <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">Telefone</p>
-                  <p className="text-base text-slate-400 font-medium mt-1">Não informado</p>
+                  <p className="text-base text-slate-700 font-medium mt-1">{usuario.telefones || "Não informado"}</p>
                 </div>
               </div>
               <div className="flex gap-3 items-start">
@@ -153,9 +234,7 @@ function Perfil() {
                 <Calendar className="text-slate-400 mt-0.5" size={20} />
                 <div>
                   <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">Membro desde</p>
-                  <p className="text-base text-slate-700 font-medium mt-1">
-                    {new Date(usuario.createdAt).toLocaleDateString("pt-BR")}
-                  </p>
+                  <p className="text-base text-slate-700 font-medium mt-1">{usuario.createdAt}</p>
                 </div>
               </div>
             </div>

@@ -29,13 +29,14 @@ model Usuario {
   id         Int         @id @default(autoincrement())
   uuid       String      @default(uuid())
   nome       String
-  cpf        String?
+  cpf        String
   email      String      @unique
   senha      String
   sacola     Sacola?
   pedidos    Pedido[]
   favoritos  Favorito[]
   enderecos  Endereco[]
+  telefones  String?
   pagamentos Pagamento[]
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt

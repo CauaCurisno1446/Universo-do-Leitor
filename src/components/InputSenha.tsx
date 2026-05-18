@@ -9,9 +9,10 @@ type InputProps = {
   onCriar: (e: React.ChangeEvent<HTMLInputElement>) => void;
   id?: string;
   name?: string;
+  required?: boolean;
 };
 
-function InputSenha({ value, placeholder, className, onCriar, id, name }: InputProps) {
+function InputSenha({ value, placeholder, className, onCriar, id, name, required }: InputProps) {
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
   return (
@@ -23,7 +24,7 @@ function InputSenha({ value, placeholder, className, onCriar, id, name }: InputP
         placeholder={placeholder}
         id={id}
         name={name}
-        required
+        required={required}
         className={`w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--marrom)] transition-colors placeholder:text-stone-300 bg-white pr-11 ${className}`}
       />
 

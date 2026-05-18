@@ -33,8 +33,8 @@ function Produtos() {
     if (filtros.emEstoque && !filtros.foraDEstoque) params.set("emEstoque", "true");
     if (!filtros.emEstoque && filtros.foraDEstoque) params.set("emEstoque", "false");
 
-    params.set("precoMin", String(filtros.precoMin));
-    params.set("precoMax", String(filtros.precoMax));
+    params.set("precoMin", String(filtros.precoMin * 100));
+    params.set("precoMax", String(filtros.precoMax * 100));
 
     filtros.categorias.forEach((cat: string) => params.append("categoria", cat));
 

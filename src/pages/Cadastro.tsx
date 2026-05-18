@@ -12,6 +12,7 @@ function Cadastro() {
   const [nome, setNome] = useState("");
   const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
+  const [telefones, setTelefones] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,7 +36,7 @@ function Cadastro() {
     fetch("http://localhost:3000/cadastro", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome, email, senha }),
+      body: JSON.stringify({ nome, email, senha, cpf, telefones }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -99,6 +100,19 @@ function Cadastro() {
               placeholder="seu@email.com"
               id="email"
               name="email"
+            />
+          </div>
+
+          {/* Telefone */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Telefone</label>
+            <InputTexto
+              type="text"
+              value={telefones}
+              onCriar={(e) => setTelefones(e.target.value)}
+              placeholder="(00) 00000-0000"
+              id="telefones"
+              name="telefones"
             />
           </div>
 

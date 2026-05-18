@@ -20,11 +20,49 @@ app.use(express.json());
 
 //GET
 app.get("/produtos", async (req: Request, res: Response) => {
-  console.log("Buscando produtos...");
   try {
-    const produtos = await prisma.produto.findMany();
-    const qtdProdutos = produtos.length;
-    console.log(`${qtdProdutos} produtos encontrados`);
+    const { precoMin, precoMax, emEstoque, categoria } = req.query;
+
+    const categorias = Array.isArray(categoria) ? categoria : categoria ? [categoria as string] : [];
+
+    const where: any = {
+      ativo: true,
+    };
+
+    // PREÇO
+    if (precoMin || precoMax) {
+      where.preco = {
+        gte: Number(precoMin) || 0,
+        lte: Number(precoMax) || 999999999,
+      };
+    }
+
+    // ESTOQUE
+    if (emEstoque === "true") {
+      where.estoque = {
+        gt: 0,
+      };
+    }
+
+    if (emEstoque === "false") {
+      where.estoque = {
+        lte: 0,
+      };
+    }
+
+    // CATEGORIAS
+    if (categorias.length > 0) {
+      where.categoria = {
+        in: categorias,
+      };
+    }
+
+    const produtos = await prisma.produto.findMany({
+      where,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
     return res.json(produtos);
   } catch (error) {
@@ -71,6 +109,7 @@ app.get("/perfil", autenticar, async (req: any, res: Response) => {
         id: true,
         nome: true,
         email: true,
+        telefones: true,
         cpf: true,
         createdAt: true,
       },
@@ -149,7 +188,7 @@ app.post("/produtos", async (req: Request, res: Response) => {
 
 app.post("/cadastro", async (req: Request, res: Response) => {
   try {
-    const { nome, email, senha, cpf } = req.body;
+    const { nome, email, senha, cpf, telefones } = req.body;
 
     const usuarioExiste = await prisma.usuario.findUnique({
       where: {
@@ -171,6 +210,7 @@ app.post("/cadastro", async (req: Request, res: Response) => {
         email,
         senha: senhaHash,
         cpf,
+        telefones,
       },
     });
 
@@ -178,6 +218,8 @@ app.post("/cadastro", async (req: Request, res: Response) => {
       id: usuario.id,
       nome: usuario.nome,
       email: usuario.email,
+      cpf: usuario.cpf,
+      telefones: usuario.telefones,
     });
   } catch (error) {
     console.error(error);
@@ -271,6 +313,33 @@ app.put("/produtos/:id", async (req: Request, res: Response) => {
 
     res.status(500).json({
       error: "Erro ao atualizar produto",
+    });
+  }
+});
+
+app.put("/perfil/:id", async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+
+    const { nome, email, cpf, telefones } = req.body;
+
+    const usuarioAtualizado = await prisma.usuario.update({
+      where: { id },
+
+      data: {
+        nome,
+        email,
+        cpf,
+        telefones,
+      },
+    });
+
+    res.json(usuarioAtualizado);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao atualizar usuário",
     });
   }
 });

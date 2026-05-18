@@ -22,6 +22,15 @@ function Header() {
     }
   }
 
+  function handleSacola() {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setSacola(!sacola);
+    } else {
+      navigate("/login");
+    }
+  }
+
   return (
     <>
       <header className="w-full bg-[var(--header)] h-[70px] flex items-center justify-between px-6 md:px-10 relative z-50 shadow-sm">
@@ -45,7 +54,7 @@ function Header() {
         <div className="flex items-center gap-3 ml-auto md:ml-0">
           <button
             className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[var(--bege)] transition-colors duration-200 cursor-pointer"
-            onClick={() => setSacola(!sacola)}
+            onClick={handleSacola}
             aria-label="Sacola">
             <ShoppingBag size={22} className="text-[var(--marrom)]" />
             {itens.length > 0 && (

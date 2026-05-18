@@ -88,7 +88,9 @@ function ProdutoDesc() {
               )}
               <h1 className="text-5xl xl:text-6xl font-serif text-stone-900 leading-[1.1] mb-6">{produto.nome}</h1>
               <div className="flex items-center gap-4">
-                <p className="text-4xl font-light text-stone-900 leading-none">R$ {produto.preco?.toFixed(2)}</p>
+                <p className="text-4xl font-light text-stone-900 leading-none">
+                  R$ {(produto.preco?.toFixed(2) / 100).toFixed(2)}
+                </p>
                 <div className="h-8 w-px bg-stone-200" />
                 <div className="flex items-center gap-1">
                   <Star size={16} className="fill-yellow-400 text-yellow-400" />
