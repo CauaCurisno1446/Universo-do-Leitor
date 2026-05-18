@@ -16,7 +16,7 @@ interface Filters {
 
 const CATEGORIAS = ["Livros", "Acessórios", "Luminárias"];
 const PRECO_MIN = 0;
-const PRECO_MAX = 500;
+const PRECO_MAX = 250;
 
 function FilterBar({ onFilterChange }: FilterBarProps) {
   const [emEstoque, setEmEstoque] = useState(true);
@@ -62,13 +62,13 @@ function FilterBar({ onFilterChange }: FilterBarProps) {
   }
 
   function handlePrecoMin(e: React.ChangeEvent<HTMLInputElement>) {
-    const val = Math.min(Number(e.target.value), precoMax - 50);
+    const val = Math.min(Number(e.target.value), precoMax - 10);
     setPrecoMin(val);
     notificar({ precoMin: val });
   }
 
   function handlePrecoMax(e: React.ChangeEvent<HTMLInputElement>) {
-    const val = Math.max(Number(e.target.value), precoMin + 50);
+    const val = Math.max(Number(e.target.value), precoMin + 10);
     setPrecoMax(val);
     notificar({ precoMax: val });
   }

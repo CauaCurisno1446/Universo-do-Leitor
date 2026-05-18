@@ -110,9 +110,10 @@ function Cadastro() {
               type="text"
               value={telefones}
               onCriar={(e) => setTelefones(e.target.value)}
-              placeholder="(00) 00000-0000"
+              placeholder="Digite apenas números (11 dígitos)"
               id="telefones"
               name="telefones"
+              maxLength={11}
             />
           </div>
 

@@ -344,6 +344,39 @@ app.put("/perfil/:id", async (req: Request, res: Response) => {
   }
 });
 
+app.put("/perfil/senha/:id", async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+
+    const { senha } = req.body;
+
+    if (!senha || senha.trim() === "") {
+      return res.status(400).json({
+        error: "Senha inválida",
+      });
+    }
+
+    const senhaHash = await bcrypt.hash(senha, 10);
+
+    await prisma.usuario.update({
+      where: { id },
+      data: {
+        senha: senhaHash,
+      },
+    });
+
+    res.json({
+      mensagem: "Senha atualizada com sucesso",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao atualizar senha",
+    });
+  }
+});
+
 //DELETE
 app.delete("/produtos/:id", async (req: Request, res: Response) => {
   try {

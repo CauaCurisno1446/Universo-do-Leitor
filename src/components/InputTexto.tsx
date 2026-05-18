@@ -7,9 +7,10 @@ interface InputProps extends React.ComponentProps<"input"> {
   id?: string;
   name?: string;
   required?: boolean;
+  maxLength?: number;
 }
 
-function InputTexto({ value, type, placeholder, className, onCriar, id, name, required }: InputProps) {
+function InputTexto({ value, type, placeholder, className, onCriar, id, name, required, maxLength }: InputProps) {
   return (
     <input
       type={type}
@@ -19,6 +20,7 @@ function InputTexto({ value, type, placeholder, className, onCriar, id, name, re
       id={id}
       name={name}
       required={required}
+      maxLength={maxLength}
       className={`border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--marrom)] transition-colors placeholder:text-stone-300 bg-white ${className}`}
     />
   );

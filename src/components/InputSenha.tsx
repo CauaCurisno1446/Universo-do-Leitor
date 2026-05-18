@@ -2,11 +2,11 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 type InputProps = {
-  value: string;
+  value?: string;
   type?: string;
   placeholder: string;
   className?: string;
-  onCriar: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onCriar?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   id?: string;
   name?: string;
   required?: boolean;
