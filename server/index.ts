@@ -256,6 +256,76 @@ app.get("/sacola", autenticarToken, async (req: AuthRequest, res: Response) => {
   }
 });
 
+app.get("/pedidos", autenticarToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const usuarioId = req.usuarioId!;
+
+    const pedidos = await prisma.pedido.findMany({
+      where: {
+        usuarioId,
+      },
+
+      include: {
+        itens: {
+          include: {
+            produto: true,
+          },
+        },
+      },
+
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    res.json(pedidos);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao buscar pedidos",
+    });
+  }
+});
+
+app.get("/pedidos/:id", autenticarToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const usuarioId = req.usuarioId!;
+    const pedidoId = Number(req.params.id);
+
+    const pedido = await prisma.pedido.findFirst({
+      where: {
+        id: pedidoId,
+        usuarioId,
+      },
+
+      include: {
+        itens: {
+          include: {
+            produto: true,
+          },
+        },
+
+        pagamentos: true,
+      },
+    });
+
+    if (!pedido) {
+      return res.status(404).json({
+        error: "Pedido não encontrado",
+      });
+    }
+
+    res.json(pedido);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao buscar pedido",
+    });
+  }
+});
+
 //POST
 app.post("/produtos", async (req: Request, res: Response) => {
   try {
@@ -488,6 +558,120 @@ app.post("/sacola/adicionar", autenticarToken, async (req: AuthRequest, res: Res
 
     res.status(500).json({
       error: "Erro ao adicionar item na sacola",
+    });
+  }
+});
+
+app.post("/pedido/finalizar", autenticarToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const usuarioId = req.usuarioId!;
+
+    const { metodoPagamento, enderecoId } = req.body;
+
+    const sacola = await prisma.sacola.findUnique({
+      where: {
+        usuarioId,
+      },
+
+      include: {
+        itens: {
+          include: {
+            produto: true,
+          },
+        },
+      },
+    });
+
+    if (!sacola || sacola.itens.length === 0) {
+      return res.status(400).json({
+        error: "Sacola vazia",
+      });
+    }
+
+    const endereco = await prisma.endereco.findFirst({
+      where: {
+        id: enderecoId,
+        usuarioId,
+      },
+    });
+
+    if (!endereco) {
+      return res.status(404).json({
+        error: "Endereço não encontrado",
+      });
+    }
+
+    const total = sacola.itens.reduce((acc, item) => {
+      return acc + item.produto.preco * item.quantidade;
+    }, 0);
+
+    const pedido = await prisma.pedido.create({
+      data: {
+        usuarioId,
+
+        status: "PENDENTE",
+
+        total,
+
+        enderecoEntrega: `
+${endereco.rua}, ${endereco.numero}
+${endereco.bairro}
+${endereco.cidade}/${endereco.estado}
+CEP: ${endereco.cep}
+        `,
+
+        itens: {
+          create: sacola.itens.map((item) => ({
+            produtoId: item.produtoId,
+            quantidade: item.quantidade,
+            preco: item.produto.preco,
+          })),
+        },
+      },
+
+      include: {
+        itens: true,
+      },
+    });
+
+    await prisma.pagamento.create({
+      data: {
+        usuarioId,
+        pedidoId: pedido.id,
+        metodo: metodoPagamento,
+        status: "PENDENTE",
+      },
+    });
+
+    for (const item of sacola.itens) {
+      await prisma.produto.update({
+        where: {
+          id: item.produtoId,
+        },
+
+        data: {
+          estoque: {
+            decrement: item.quantidade,
+          },
+        },
+      });
+    }
+
+    await prisma.sacolaItem.deleteMany({
+      where: {
+        sacolaId: sacola.id,
+      },
+    });
+
+    res.json({
+      success: true,
+      pedido,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao finalizar pedido",
     });
   }
 });

@@ -40,6 +40,7 @@ function Perfil() {
 
   const [favoritos, setFavoritos] = useState<any[]>([]);
   const [enderecos, setEnderecos] = useState<any[]>([]);
+  const [pedidos, setPedidos] = useState<any[]>([]);
 
   const [cep, setCep] = useState("");
   const [rua, setRua] = useState("");
@@ -104,6 +105,25 @@ function Perfil() {
       .then((res) => res.json())
       .then((data) => {
         setEnderecos(data);
+      });
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    fetch("http://localhost:3000/pedidos", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setPedidos(data);
+      })
+      .catch((error) => {
+        console.error(error);
       });
   }, []);
 
@@ -633,13 +653,70 @@ function Perfil() {
 
         <br />
 
-        <section className="bg-white rounded-3xl p-8 sm:p-10 shadow-[0_2px_20px_rgb(0,0,0,0.04)] mb-8 flex flex-col md:flex-row items-center md:items-start gap-8 relative overflow-hidden">
+        <section className="bg-white rounded-3xl p-8 sm:p-10 shadow-[0_2px_20px_rgb(0,0,0,0.04)] mb-8 relative overflow-hidden">
           <div className="flex items-center gap-3 border-b border-slate-100 pb-6 mb-8">
             <div className="p-2 bg-slate-50 rounded-lg text-slate-400">
               <Package size={24} />
             </div>
+
             <h2 className="text-xl font-bold text-slate-800">Pedidos</h2>
           </div>
+
+          {pedidos.length === 0 ? (
+            <p className="text-sm text-slate-500 italic">Você ainda não realizou nenhum pedido.</p>
+          ) : (
+            <div className="flex flex-col gap-6">
+              {pedidos.map((pedido) => (
+                <div key={pedido.id} className="border border-slate-100 rounded-2xl p-6">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                    <div>
+                      <p className="text-sm text-slate-400">Pedido #{pedido.id}</p>
+
+                      <p className="text-sm text-slate-500">{formatarData(pedido.createdAt)}</p>
+                    </div>
+
+                    <div className="flex flex-col items-start md:items-end">
+                      <span className="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold">
+                        {pedido.status}
+                      </span>
+
+                      <p className="text-lg font-bold text-[var(--marrom)] mt-2">
+                        {(pedido.total / 100).toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-4">
+                    {pedido.itens.map((item: any) => (
+                      <div key={item.id} className="flex items-center gap-4 border-t border-slate-100 pt-4">
+                        <img
+                          src={item.produto.imagemUrl}
+                          alt={item.produto.nome}
+                          className="w-20 h-20 rounded-xl object-cover"
+                        />
+
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-slate-800">{item.produto.nome}</h3>
+
+                          <p className="text-sm text-slate-500">Quantidade: {item.quantidade}</p>
+                        </div>
+
+                        <p className="font-bold text-[var(--marrom)]">
+                          {((item.preco * item.quantidade) / 100).toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          })}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         <br />

@@ -105,10 +105,43 @@ function Sacola() {
     }
   }
 
-  function handleFinalizar() {
+  async function handleFinalizar() {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
     if (enderecos.length === 0 || itens.length === 0) return;
 
-    setFinalizado(true);
+    try {
+      const response = await fetch("http://localhost:3000/pedido/finalizar", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+
+        body: JSON.stringify({
+          metodoPagamento,
+          enderecoId: enderecos[0].id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error);
+      }
+
+      setItens([]);
+      setTotal(0);
+
+      window.dispatchEvent(new Event("sacolaAtualizada"));
+
+      setFinalizado(true);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   useEffect(() => {
