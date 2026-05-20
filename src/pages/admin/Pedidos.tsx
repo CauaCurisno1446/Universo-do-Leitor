@@ -171,6 +171,8 @@ function Pedidos() {
         </select>
       </div>
 
+      <br />
+
       {/* Lista */}
       <div className="flex flex-col gap-3">
         {loading ? (

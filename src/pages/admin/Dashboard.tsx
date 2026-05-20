@@ -159,9 +159,9 @@ function Dashboard() {
   ];
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto">
+    <div className="min-h-screen w-full p-6 md:p-10">
       {/* Título */}
-      <div className="mb-8">
+      <div className="mb-10">
         <h1 className="text-2xl font-bold text-[var(--marrom)]" id="Texto">
           Dashboard
         </h1>
@@ -169,9 +169,9 @@ function Dashboard() {
       </div>
 
       {/* Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
         {cards.map(({ label, valor, icon: Icon, cor, detalhe }) => (
-          <div key={label} className="bg-white rounded-2xl p-5 shadow-sm border border-stone-100">
+          <div key={label} className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
             <div className={`w-10 h-10 ${cor} rounded-xl flex items-center justify-center mb-3`}>
               <Icon size={18} color="white" />
             </div>
@@ -182,8 +182,10 @@ function Dashboard() {
         ))}
       </div>
 
+      <br />
+
       {/* Resumo + Pedidos recentes */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Pedidos por status */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
           <h2 className="font-bold text-sm text-[var(--marrom)] mb-4" id="Texto">

@@ -106,7 +106,6 @@ function ProdutosAdmin() {
         setTimeout(fecharModal, 1000);
       }
     } catch {
-      // silencioso
     } finally {
       setSalvando(false);
     }
@@ -120,7 +119,6 @@ function ProdutosAdmin() {
       });
       setProdutos((prev) => prev.filter((p) => p.id !== id));
     } catch {
-      // silencioso
     } finally {
       setConfirmarExcluir(null);
     }
@@ -157,12 +155,14 @@ function ProdutosAdmin() {
         <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
         <input
           type="text"
-          placeholder="Buscar por nome ou autor..."
+          placeholder="Buscar por nome do produto..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 text-sm border border-stone-200 rounded-xl focus:outline-none focus:border-[var(--marrom)] bg-white"
         />
       </div>
+
+      <br />
 
       {/* Tabela */}
       <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
