@@ -1,25 +1,28 @@
 import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, X, Search, Check } from "lucide-react";
 import { InputTexto } from "../../components/InputTexto";
+import { useModal } from "../../hooks/useModal";
+import { useToast } from "../../hooks/useToast";
+import Toast from "../../components/Toast";
 
 interface Produto {
   id: number;
   nome: string;
-  autor: string;
   preco: number;
   estoque: number;
   imagemUrl: string;
   descricao: string;
+  descDetalhada: string;
   categoria: string;
 }
 
 const produtoVazio: Omit<Produto, "id"> = {
   nome: "",
-  autor: "",
   preco: 0,
   estoque: 0,
   imagemUrl: "",
   descricao: "",
+  descDetalhada: "",
   categoria: "",
 };
 
@@ -33,14 +36,16 @@ function ProdutosAdmin() {
   const [loading, setLoading] = useState(true);
 
   // Modal
-  const [modalAberto, setModalAberto] = useState(false);
-  const [modoEditar, setModoEditar] = useState(false);
   const [produtoAtual, setProdutoAtual] = useState<Omit<Produto, "id"> & { id?: number }>(produtoVazio);
   const [salvando, setSalvando] = useState(false);
   const [sucesso, setSucesso] = useState(false);
+  const modalEditar = useModal();
+  const [modoEditar, setModoEditar] = useState(false);
 
   // Confirmação de exclusão
   const [confirmarExcluir, setConfirmarExcluir] = useState<number | null>(null);
+
+  const { toast, mostrar } = useToast();
 
   const token = localStorage.getItem("adminToken");
 
@@ -64,21 +69,19 @@ function ProdutosAdmin() {
   }, []);
 
   function abrirCriar() {
-    setProdutoAtual(produtoVazio);
     setModoEditar(false);
-    setModalAberto(true);
-    setSucesso(false);
+    setProdutoAtual(produtoVazio);
+    modalEditar.abrir();
   }
 
   function abrirEditar(produto: Produto) {
-    setProdutoAtual({ ...produto });
     setModoEditar(true);
-    setModalAberto(true);
-    setSucesso(false);
+    setProdutoAtual(produto);
+    modalEditar.abrir();
   }
 
   function fecharModal() {
-    setModalAberto(false);
+    modalEditar.fechar();
     setSucesso(false);
   }
 
@@ -89,6 +92,7 @@ function ProdutosAdmin() {
       const url = modoEditar
         ? `http://localhost:3000/admin/produtos/${produtoAtual.id}`
         : "http://localhost:3000/admin/produtos";
+
       const method = modoEditar ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -105,7 +109,9 @@ function ProdutosAdmin() {
         buscarProdutos();
         setTimeout(fecharModal, 1000);
       }
+      mostrar("Produto cadastrado!", "sucesso");
     } catch {
+      mostrar("Erro ao cadastrar produto", "erro");
     } finally {
       setSalvando(false);
     }
@@ -118,15 +124,15 @@ function ProdutosAdmin() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProdutos((prev) => prev.filter((p) => p.id !== id));
+      mostrar("Produto excluído!", "sucesso");
     } catch {
+      mostrar("Erro ao excluir produto", "erro");
     } finally {
       setConfirmarExcluir(null);
     }
   }
 
-  const produtosFiltrados = produtos.filter(
-    (p) => p.nome.toLowerCase().includes(busca.toLowerCase()) || p.autor?.toLowerCase().includes(busca.toLowerCase()),
-  );
+  const produtosFiltrados = produtos.filter((p) => p.nome.toLowerCase().includes(busca.toLowerCase()));
 
   function handleCampo(campo: keyof typeof produtoAtual, valor: string | number) {
     setProdutoAtual((prev) => ({ ...prev, [campo]: valor }));
@@ -206,8 +212,8 @@ function ProdutosAdmin() {
                         )}
                         <div className="min-w-0">
                           <p className="font-semibold text-[var(--marrom)] truncate max-w-[180px]">{produto.nome}</p>
-                          {produto.autor && (
-                            <p className="text-xs text-stone-400 truncate max-w-[160px]">{produto.autor}</p>
+                          {produto.descDetalhada && (
+                            <p className="text-xs text-stone-400 truncate max-w-[160px]">{produto.descDetalhada}</p>
                           )}
                         </div>
                       </div>
@@ -272,7 +278,7 @@ function ProdutosAdmin() {
       </div>
 
       {/* Modal criar/editar */}
-      {modalAberto && (
+      {modalEditar.aberto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/40" onClick={fecharModal} />
           <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -293,15 +299,6 @@ function ProdutosAdmin() {
                   onCriar={(e) => handleCampo("nome", e.target.value)}
                   placeholder="Nome do produto"
                   required
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Autor</label>
-                <InputTexto
-                  value={produtoAtual.autor}
-                  onCriar={(e) => handleCampo("autor", e.target.value)}
-                  placeholder="Autor"
                 />
               </div>
 
@@ -332,11 +329,20 @@ function ProdutosAdmin() {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Categoria</label>
-                <InputTexto
+                {/* <InputTexto
                   value={produtoAtual.categoria}
                   onCriar={(e) => handleCampo("categoria", e.target.value)}
                   placeholder="ex: Romance, Ficção..."
-                />
+                /> */}
+                <select
+                  value={produtoAtual.categoria}
+                  onChange={(e) => handleCampo("categoria", e.target.value)}
+                  className="border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--marrom)] transition-colors placeholder:text-stone-300 bg-white">
+                  <option value="">Selecione uma categoria</option>
+                  <option value="Livros">Livros</option>
+                  <option value="Acessórios">Acessórios</option>
+                  <option value="Luminárias">Luminárias</option>
+                </select>
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -359,6 +365,19 @@ function ProdutosAdmin() {
                 />
               </div>
 
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+                  Descrição detalhada
+                </label>
+                <textarea
+                  value={produtoAtual.descDetalhada}
+                  onChange={(e) => handleCampo("descDetalhada", e.target.value)}
+                  placeholder="Descrição detalhada do produto..."
+                  rows={3}
+                  className="border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--marrom)] transition-colors placeholder:text-stone-300 bg-white resize-none"
+                />
+              </div>
+
               <button
                 type="submit"
                 disabled={salvando || sucesso}
@@ -374,7 +393,7 @@ function ProdutosAdmin() {
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Salvando...
                   </span>
-                ) : modoEditar ? (
+                ) : modalEditar.aberto ? (
                   "Salvar alterações"
                 ) : (
                   "Cadastrar produto"
@@ -384,6 +403,8 @@ function ProdutosAdmin() {
           </div>
         </div>
       )}
+
+      {toast && <Toast mensagem={toast.mensagem} tipo={toast.tipo} />}
     </div>
   );
 }
