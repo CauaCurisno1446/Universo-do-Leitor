@@ -8,9 +8,17 @@ import Login from "../pages/Login";
 import Cadastro from "../pages/Cadastro";
 import Perfil from "../pages/Perfil";
 
+import LoginAdmin from "../pages/admin/LoginAdmin";
+import AdminLayout from "../pages/admin/AdminLayout";
+import Dashboard from "../pages/admin/Dashboard";
+import ProdutosAdmin from "../pages/admin/ProdutosAdmin";
+import Pedidos from "../pages/admin/Pedidos";
+import PerfilAdmin from "../pages/admin/PerfilAdmin";
+
 function AppRoutes() {
   return (
     <Routes>
+      {/* Rotas do cliente */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/produtos" element={<Produtos />} />
@@ -21,6 +29,16 @@ function AppRoutes() {
 
       <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Cadastro />} />
+
+      {/* Rotas do admin */}
+      <Route path="/admin/login" element={<LoginAdmin />} />
+
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="produtos" element={<ProdutosAdmin />} />
+        <Route path="pedidos" element={<Pedidos />} />
+        <Route path="perfil" element={<PerfilAdmin />} />
+      </Route>
     </Routes>
   );
 }

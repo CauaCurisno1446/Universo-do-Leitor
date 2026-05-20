@@ -96,6 +96,15 @@ function Login() {
             Cadastre-se
           </Link>
         </p>
+
+        <br />
+
+        <p className="text-start text-sm text-stone-400 mt-8">
+          É admin?{" "}
+          <Link to="/admin/login" className="text-[var(--laranja)] font-semibold hover:underline">
+            Acesse aqui
+          </Link>
+        </p>
       </div>
 
       <div

@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 
 import { autenticarToken, AuthRequest } from "./middleware/decoder.js";
+import { autenticarAdmin, AdminRequest } from "./middleware/autenticarAdmin.js";
 import autenticar from "./middleware/autenticar.js";
 
 dotenv.config();
@@ -870,6 +871,265 @@ app.delete("/sacola/item/:id", autenticarToken, async (req: AuthRequest, res: Re
     res.status(500).json({
       error: "Erro ao remover item",
     });
+  }
+});
+
+// ============================================================
+// ROTAS ADMIN
+// ============================================================
+
+// POST /admin/login
+// Login do admin — igual ao /login normal, mas verifica role === "admin"
+app.post("/admin/login", async (req: Request, res: Response) => {
+  try {
+    const { email, senha } = req.body;
+
+    const usuario = await prisma.usuario.findUnique({ where: { email } });
+
+    if (!usuario) {
+      return res.status(401).json({ error: "E-mail ou senha inválidos" });
+    }
+
+    const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
+    if (!senhaCorreta) {
+      return res.status(401).json({ error: "E-mail ou senha inválidos" });
+    }
+
+    if ((usuario as any).role !== "admin") {
+      return res.status(403).json({ error: "Acesso negado" });
+    }
+
+    const token = jwt.sign({ id: usuario.id, email: usuario.email }, JWT_SECRET, { expiresIn: "7d" });
+
+    res.json({
+      token,
+      usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao fazer login" });
+  }
+});
+
+// GET /admin/estatisticas
+app.get("/admin/estatisticas", autenticarAdmin, async (req: AdminRequest, res: Response) => {
+  try {
+    const [totalProdutos, totalPedidos, totalUsuarios, pedidos] = await Promise.all([
+      prisma.produto.count(),
+      prisma.pedido.count(),
+      prisma.usuario.count({ where: { role: "usuario" } as any }),
+      prisma.pedido.findMany({ select: { total: true, status: true } }),
+    ]);
+
+    const receitaTotal = pedidos.reduce((acc, p) => acc + p.total, 0);
+    const pedidosPendentes = pedidos.filter((p) => p.status === "PENDENTE").length;
+    const pedidosConcluidos = pedidos.filter((p) => p.status === "CONCLUIDO").length;
+
+    // Produto mais vendido
+    const maisVendido = await prisma.pedidoItem.groupBy({
+      by: ["produtoId"],
+      _sum: { quantidade: true },
+      orderBy: { _sum: { quantidade: "desc" } },
+      take: 1,
+    });
+
+    let produtoMaisVendido = "—";
+    if (maisVendido.length > 0) {
+      const produto = await prisma.produto.findUnique({
+        where: { id: maisVendido[0].produtoId },
+        select: { nome: true },
+      });
+      produtoMaisVendido = produto?.nome ?? "—";
+    }
+
+    res.json({
+      totalProdutos,
+      totalPedidos,
+      totalUsuarios,
+      receitaTotal,
+      pedidosPendentes,
+      pedidosConcluidos,
+      produtoMaisVendido,
+      crescimentoReceita: 0, // implemente conforme necessário
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar estatísticas" });
+  }
+});
+
+// GET /admin/pedidos
+app.get("/admin/pedidos", autenticarAdmin, async (req: AdminRequest, res: Response) => {
+  try {
+    const limite = Number(req.query.limite) || undefined;
+
+    const pedidos = await prisma.pedido.findMany({
+      take: limite,
+      orderBy: { createdAt: "desc" },
+      include: {
+        usuario: { select: { nome: true, email: true } },
+        itens: { include: { produto: true } },
+      },
+    });
+
+    // Formata para o shape esperado pelo frontend
+    const resultado = pedidos.map((p) => ({
+      id: p.id,
+      status: p.status.toLowerCase(),
+      total: p.total,
+      criadoEm: p.createdAt,
+      usuario: p.usuario,
+      itens: p.itens.map((item) => ({
+        id: item.id,
+        quantidade: item.quantidade,
+        produto: {
+          nome: item.produto.nome,
+          imagemUrl: item.produto.imagemUrl,
+          preco: item.produto.preco,
+        },
+      })),
+    }));
+
+    res.json(resultado);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar pedidos" });
+  }
+});
+
+// PUT /admin/pedidos/:id  — atualiza status
+app.put("/admin/pedidos/:id", autenticarAdmin, async (req: AdminRequest, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const { status } = req.body;
+
+    const pedidoAtualizado = await prisma.pedido.update({
+      where: { id },
+      data: { status: status.toUpperCase() },
+    });
+
+    res.json(pedidoAtualizado);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao atualizar pedido" });
+  }
+});
+
+// POST /admin/produtos  — cria produto (com autenticação admin)
+app.post("/admin/produtos", autenticarAdmin, async (req: AdminRequest, res: Response) => {
+  try {
+    const { nome, descricao, descDetalhada, preco, imagemUrl, categoria, estoque } = req.body;
+
+    const produto = await prisma.produto.create({
+      data: {
+        nome,
+        descricao,
+        descDetalhada,
+        preco: Number(preco),
+        imagemUrl,
+        categoria,
+        estoque: Number(estoque || 0),
+      },
+    });
+
+    res.status(201).json(produto);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao criar produto" });
+  }
+});
+
+// PUT /admin/produtos/:id  — edita produto (com autenticação admin)
+app.put("/admin/produtos/:id", autenticarAdmin, async (req: AdminRequest, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const { nome, descricao, descDetalhada, preco, imagemUrl, categoria, estoque, ativo } = req.body;
+
+    const produto = await prisma.produto.update({
+      where: { id },
+      data: {
+        nome,
+        descricao,
+        descDetalhada,
+        preco: Number(preco),
+        imagemUrl,
+        categoria,
+        estoque: Number(estoque),
+        ativo,
+      },
+    });
+
+    res.json(produto);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao atualizar produto" });
+  }
+});
+
+// DELETE /admin/produtos/:id  — exclui produto (com autenticação admin)
+app.delete("/admin/produtos/:id", autenticarAdmin, async (req: AdminRequest, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+
+    await prisma.produto.delete({ where: { id } });
+
+    res.json({ message: "Produto deletado com sucesso" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao deletar produto" });
+  }
+});
+
+// GET /admin/perfil
+app.get("/admin/perfil", autenticarAdmin, async (req: AdminRequest, res: Response) => {
+  try {
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: req.adminId },
+      select: { id: true, nome: true, email: true },
+    });
+
+    res.json(usuario);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar perfil" });
+  }
+});
+
+// PUT /admin/perfil  — atualiza nome e email do admin
+app.put("/admin/perfil", autenticarAdmin, async (req: AdminRequest, res: Response) => {
+  try {
+    const { nome, email } = req.body;
+
+    const usuario = await prisma.usuario.update({
+      where: { id: req.adminId },
+      data: { nome, email },
+    });
+
+    res.json({ id: usuario.id, nome: usuario.nome, email: usuario.email });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao atualizar perfil" });
+  }
+});
+
+// PUT /admin/perfil/senha  — troca senha do admin
+app.put("/admin/perfil/senha", autenticarAdmin, async (req: AdminRequest, res: Response) => {
+  try {
+    const { senhaAtual, novaSenha } = req.body;
+
+    const usuario = await prisma.usuario.findUnique({ where: { id: req.adminId } });
+    if (!usuario) return res.status(404).json({ error: "Usuário não encontrado" });
+
+    const senhaCorreta = await bcrypt.compare(senhaAtual, usuario.senha);
+    if (!senhaCorreta) return res.status(401).json({ error: "Senha atual incorreta" });
+
+    const senhaHash = await bcrypt.hash(novaSenha, 10);
+    await prisma.usuario.update({ where: { id: req.adminId }, data: { senha: senhaHash } });
+
+    res.json({ mensagem: "Senha alterada com sucesso" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao alterar senha" });
   }
 });
 
